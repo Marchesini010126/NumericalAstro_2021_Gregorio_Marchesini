@@ -7,6 +7,7 @@
 ###########################################################################
 #%%
 
+
 ''' 
 Copyright (c) 2010-2020, Delft University of Technology
 All rights reserved
@@ -20,7 +21,18 @@ http://tudat.tudelft.nl/LICENSE.
 
 import numpy as np
 from matplotlib import pyplot as plt
+import seaborn as sns
+import matplotlib.ticker as mtick
 
+## Some basic plotting specifications 
+plt.rc('axes', titlesize=18)     # fontsize of the axes title
+plt.rc('axes', labelsize=14)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=13)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=13)    # fontsize of the tick labels
+plt.rc('legend', fontsize=13)    # legend fontsize
+plt.rc('font', size=13)          # controls default text sizes
+
+# Main TuDat imports
 from tudatpy.io import save2txt
 from tudatpy.kernel import constants
 from tudatpy.kernel.interface import spice
@@ -89,8 +101,7 @@ central_bodies      = ['Ganymede']   # bodies which are contributing with the fu
 
 # Define accelerations acting on vehicle.
 acceleration_settings_on_juice = dict(
-    Ganymede=[propagation_setup.acceleration.spherical_harmonic_gravity(2,2),
-                propagation_setup.acceleration.aerodynamic()]  # create a list of possible accelerations you want. In this case you have one single body and his atmosphere
+    Ganymede=[propagation_setup.acceleration.point_mass_gravity()]  # create a list of possible accelerations you want. In this case you have one single body and his atmosphere
 )
 # do note that when calling a method from a class you need to put the parenthesis. 
 # Otherwise this will rise an error since the method is defined and not the call to the function output
@@ -163,12 +174,22 @@ dependent_variables = dynamics_simulator.dependent_variable_history  # here you 
 ###########################################################################
 
 save2txt(solution=simulation_result,
-         filename='JUICE_cartesianstate_Q1.dat',
+         filename='JUICEPropagationHistory_Q2.dat',
+         directory='./'
+         )
+
+save2txt(solution=dependent_variables,
+         filename='JUICEPropagationHistory_DependentVariables_Q2.dat',
+         directory='./'
+         )
+
+save2txt(solution=simulation_result,
+         filename='JUICE_cartesianstate_Q2.dat',
          directory='./OUTPUTFILES'
          )
 
 save2txt(solution=dependent_variables,
-         filename='JUICE_KeplerElements_Q1.dat',
+         filename='JUICE_KeplerElemets_Q2.dat',
          directory='./OUTPUTFILES'
          )
 
@@ -176,63 +197,28 @@ save2txt(solution=dependent_variables,
 # PLOT RESULTS ############################################################
 ###########################################################################
 
+import matplotlib.ticker as mticker
 
 # Extract time and Kepler elements from dependent variables
 kepler_elements = np.vstack(list(dependent_variables.values()))
 time = np.array(list(dependent_variables.keys()))
 time_days = [ t / constants.JULIAN_DAY - simulation_start_epoch / constants.JULIAN_DAY for t in time ]
 
-## task A
+## ONly if you want to plot in Python
 
-fig,ax     =plt.subplots(3,2,figsize=(15,10))
-elements   =[r'$a\left[km\right]    $',r'$e$',r'$i\left[rad\right]$',r'$\omega\left[rad\right]$',r'$\Omega\left[rad\right]$',r'$\theta\left[rad\right]$']
-indxmatrix =np.arange(6).reshape(3,2)
-
-# only if you want to plot in python
-
+# fig,ax     =plt.subplots(3,2,figsize=(10,6))
+# elements   =[r'$a\left[km\right]    $',r'$e$',r'$i\left[rad\right]$',r'$\omega\left[rad\right]$',r'$\Omega\left[rad\right]$',r'$\theta\left[rad\right]$']
+# indxmatrix =np.arange(6).reshape(3,2)
+# f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
+# g = lambda x,pos : "${}$".format(f._formatSciNotation('%1.10e' % x))
 # for ii in range(3):
 #     for jj in range(2):
 #       ax[ii,jj].plot(time_days,kepler_elements[:,indxmatrix[ii,jj]])
 #       ax[ii,jj].set_xlabel('t [days]')
-#       ax[ii,jj].set_xlabel(elements[indxmatrix[ii][jj]])
-
+#       ax[ii,jj].set_ylabel(elements[indxmatrix[ii][jj]])
+#       ax[ii,jj].get_yaxis().get_major_formatter().set_useOffset(False)
+#       ax[ii,jj].set_yticks(np.linspace(min(kepler_elements[:,indxmatrix[ii,jj]]),max(kepler_elements[:,indxmatrix[ii,jj]]),4))
 # plt.tight_layout()
 # plt.show()
-
-# estimate J2 effects
-# assumptions
-# 1) average semimajor axis is used
-# 2) average eccentricity is used
-# 3) J2 effect from Ganymede is used
-# 4) Radious of Ganymede is used
-
-# Ganymede properties
-ganymede_mu               = body_settings.get( 'Ganymede' ).gravity_field_settings.gravitational_parameter
-ganymede_normalized_c20   = body_settings.get( 'Ganymede' ).gravity_field_settings.normalized_cosine_coefficients[2,0]
-ganymede_reference_radius = body_settings.get( 'Ganymede' ).gravity_field_settings.reference_radius
-ganymede_j2 = -ganymede_normalized_c20 * np.sqrt(5)
-
-a_av   = np.mean(kepler_elements[:,0])        #m
-ecc_av = np.mean(kepler_elements[:,1])        #adimansional
-i_av   = np.mean(kepler_elements[:,2])        #rad
-
-mean_motion = np.sqrt(ganymede_mu/a_av**3) 
-
-Omega0 = kepler_elements[0,4]
-omega0 = kepler_elements[0,3]
-
-dOmega_dt   =  -3*mean_motion*ganymede_reference_radius**2*ganymede_j2/(2*a_av**2*(1-ecc_av**2)**2)*np.cos(i_av)
-domega_dt   =   3*mean_motion*ganymede_reference_radius**2*ganymede_j2/(4*a_av**2*(1-ecc_av**2)**2)*(4-5*np.sin(i_av)**2)
-
-OmegaAnalyticalDynamics = Omega0 + dOmega_dt*(time-time[0]) # rad
-omegaAnalyticalDynamics = omega0 + domega_dt*(time-time[0])  # rad
-
-with open('./OUTPUTFILES/OmegaAnalyticalDynamics.txt', 'wb') as f:
-        np.savetxt('./OUTPUTFILES/OmegaAnalyticalDynamics.txt',OmegaAnalyticalDynamics)
-
-with open('./OUTPUTFILES/omegaSmallAnalyticalDynamics.txt', 'wb') as f:
-        np.savetxt('./OUTPUTFILES/omegaSmallAnalyticalDynamics.txt',omegaAnalyticalDynamics)
-
-
 
 # %%

@@ -58,7 +58,7 @@ spice.load_standard_kernels() # load the kernel?
 
 # Create settings for celestial bodies
 bodies_to_create = ['Ganymede','Sun','Io','Callisto','Europa','Jupiter','Saturn']         # this must have a list of all the planets to create
-global_frame_origin = 'Jupiter'        # this is the origin of the refernce system
+global_frame_origin = 'Jupiter'        # this is the origin of the reference system
 global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
 body_settings = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
@@ -108,13 +108,12 @@ environment_setup.add_radiation_pressure_interface(
 ###########################################################################
 
 # Define bodies that are propagated, and their central bodies of propagation.
-bodies_to_propagate = ['JUICE']
-central_bodies      = ['Jupiter']   
+bodies_to_propagate = ['JUICE','Ganymede']
+central_bodies      = ['Jupiter','Jupiter']   # this is the body w.r. to the integrations are done
 
 
 
-# Define accelerations acting on vehicle
-# acceleration in the case of "all planets" perturbation
+# Define accelerations acting on vehic
 acceleration_settings_on_juice_all_planets = dict(
     Ganymede =[propagation_setup.acceleration.spherical_harmonic_gravity(2,2),
                 propagation_setup.acceleration.aerodynamic()],  
@@ -126,15 +125,28 @@ acceleration_settings_on_juice_all_planets = dict(
     Io       =[propagation_setup.acceleration.point_mass_gravity()],
     Callisto =[propagation_setup.acceleration.point_mass_gravity()],
 )
+acceleration_settings_on_ganymede_all_planets = dict( 
+    Jupiter  =[propagation_setup.acceleration.spherical_harmonic_gravity(4,0)],
+    Saturn   =[propagation_setup.acceleration.point_mass_gravity()],
+    Sun      =[propagation_setup.acceleration.point_mass_gravity()],
+    Europa   =[propagation_setup.acceleration.point_mass_gravity()],
+    Io       =[propagation_setup.acceleration.point_mass_gravity()],
+    Callisto =[propagation_setup.acceleration.point_mass_gravity()],
+)
 
-# acceleration in the case of ganymede two body problem
+
 acceleration_settings_on_juice_only_ganymede = dict(
     Ganymede=[propagation_setup.acceleration.point_mass_gravity()]  # create a list of possible accelerations you want. In this case you have one single body and his atmosphere
 )
+acceleration_settings_on_ganymede_only_ganymede = dict();
+    
 
-# Create global accelerations dictionary for the two cases
-acceleration_settings_all_planets   = {'JUICE': acceleration_settings_on_juice_all_planets}
-acceleration_settings_only_ganymede = {'JUICE': acceleration_settings_on_juice_only_ganymede}
+# there is no acceleration setting to be set on Ganymede. 
+# THIS DOESN'T MEAN THERE IS NO FORCE  
+
+# Create global accelerations dictionary.
+acceleration_settings_all_planets = {'JUICE': acceleration_settings_on_juice_all_planets,'Ganymede': acceleration_settings_on_ganymede_all_planets}
+acceleration_settings_only_ganymede = {'JUICE': acceleration_settings_on_juice_only_ganymede,'Ganymede': acceleration_settings_on_ganymede_only_ganymede}
 
 # Create acceleration models.
 acceleration_models_all_planets = propagation_setup.create_acceleration_models(
@@ -146,22 +158,36 @@ acceleration_models_only_ganymede = propagation_setup.create_acceleration_models
 # CREATE PROPAGATION SETTINGS #############################################
 ###########################################################################
 
-# Define initial state.
-system_initial_state = spice.get_body_cartesian_state_at_epoch(
+# Define initial state for Juice
+system_initial_state_juice = spice.get_body_cartesian_state_at_epoch(
     target_body_name       ='JUICE',
     observer_body_name     ='Jupiter',
     reference_frame_name   ='ECLIPJ2000',
     aberration_corrections ='NONE',
     ephemeris_time= simulation_start_epoch )
 
+# Define initial state for Ganymede
+system_initial_state_ganymede = spice.get_body_cartesian_state_at_epoch(
+    target_body_name       ='Ganymede',
+    observer_body_name     ='Jupiter',
+    reference_frame_name   ='ECLIPJ2000',
+    aberration_corrections ='NONE',
+    ephemeris_time= simulation_start_epoch )
+
+system_initial_state = np.concatenate((system_initial_state_juice,system_initial_state_ganymede),axis=0)
 # Define required outputs (for both cases is the same)
 dependent_variables_to_save = [
     propagation_setup.dependent_variable.relative_position('Ganymede','Jupiter')
 ]
 
+#[aerodynamic(Ganymede),point_mass_gravity_type(Europa),point_mass_gravity_type(Callisto),point_mass_gravity_type(IO),point_mass_gravity_type(SUN),Solar_radiation(Sun),Spherical_harmonics(ganymede((00),(20),(22))),Spherical_harmonics(Jupiter((00),(20),(40)))]
+
+# note here you made the error of not creating a list. you should create  alist of outputs.
+# Read carefully the errors since they are really explicits when you know the type of each variable.
+
 
 # Create propagation settings.
-termination_settings            = propagation_setup.propagator.time_termination( simulation_end_epoch )
+termination_settings = propagation_setup.propagator.time_termination( simulation_end_epoch )
 propagator_settings_all_planets = propagation_setup.propagator.translational(
     central_bodies,
     acceleration_models_all_planets,
@@ -193,7 +219,6 @@ integrator_settings = propagation_setup.integrator.runge_kutta_4(
 # Create simulation object and propagate dynamics.
 dynamics_simulator_all_planets = numerical_simulation.SingleArcSimulator(
     bodies, integrator_settings, propagator_settings_all_planets )
-
 # Create simulation object and propagate dynamics.
 dynamics_simulator_only_ganymede = numerical_simulation.SingleArcSimulator(
     bodies, integrator_settings, propagator_settings_only_ganymede)
@@ -206,25 +231,26 @@ dependent_variables_only_ganymede   = dynamics_simulator_only_ganymede.dependent
 # keyword are the time stumps
 # the values are lists of kepler elemnts at each time stamp
 
+
 save2txt(solution=dependent_variables_all_planets,
-         filename='Ganymede_wrt_Jupiter_perturbed_case_Q5iv.dat',
+         filename='Ganymede_wrt_Jupiter_perturbed_case_Q6.dat',
          directory='./OUTPUTFILES'
          )
 
 # w.r.t jupiter
 save2txt(solution=simulation_result_all_planets,
-         filename='JUICE_cartesianstate_Q5iv.dat',
+         filename='JUICE_cartesianstate_perturbed_Q6.dat',
          directory='./OUTPUTFILES'
          )
 
 
 save2txt(solution=dependent_variables_only_ganymede,
-         filename='Ganymede_wrt_Jupiter_unperturbed_case_Q5ii.dat',
+         filename='Ganymede_wrt_Jupiter_unperturbed_case_Q6.dat',
          directory='./OUTPUTFILES'
          )
 
 # w.r.t jupiter
 save2txt(solution=simulation_result_only_ganymede,
-         filename='JUICE_cartesianstate_Q5ii.dat',
+         filename='JUICE_cartesianstate_unperturbed_Q6.dat',
          directory='./OUTPUTFILES'
          )

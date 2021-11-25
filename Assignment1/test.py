@@ -1,3 +1,12 @@
+###########################################################################
+#
+# # Numerical Astrodynamics 2021/2022
+#
+# # Assignment 1 - Propagation Settings
+#
+###########################################################################
+
+
 ''' 
 Copyright (c) 2010-2020, Delft University of Technology
 All rights reserved
@@ -29,7 +38,7 @@ from tudatpy.kernel.interface import spice
 from tudatpy.kernel import numerical_simulation # KC: newly added by me
 from tudatpy.kernel.numerical_simulation import environment_setup
 from tudatpy.kernel.numerical_simulation import propagation_setup
-
+from tudatpy.util import result2array
 
 
 # # student number: 1244779 --> 1244ABC
@@ -38,7 +47,7 @@ B = 2
 C = 4
 
 simulation_start_epoch = 33.15 * constants.JULIAN_YEAR + A * 7.0 * constants.JULIAN_DAY + B * constants.JULIAN_DAY + C * constants.JULIAN_DAY / 24.0
-simulation_end_epoch = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 24.0
+simulation_end_epoch   = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 24.0
 
 ###########################################################################
 # CREATE ENVIRONMENT ######################################################
@@ -49,13 +58,13 @@ spice.load_standard_kernels() # load the kernel?
 
 # Create settings for celestial bodies
 bodies_to_create         = ['Ganymede','Sun','Io','Callisto','Europa','Jupiter','Saturn']         # this must have a list of all the planets to create
-global_frame_origin      = 'Jupiter'        # this is the origin of the reference system
+global_frame_origin      = 'Jupiter'        # this is the origin of the refernce system
 global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
-body_settings = environment_setup.get_default_body_settings(
+body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
 # Add Ganymede exponential atmosphere
-density_scale_height = 40.0E3
+density_scale_height     = 40.0E3
 density_at_zero_altitude = 2.0E-9
 body_settings.get( 'Ganymede' ).atmosphere_settings = environment_setup.atmosphere.exponential( 
         density_scale_height, density_at_zero_altitude)
@@ -64,94 +73,58 @@ body_settings.get( 'Ganymede' ).atmosphere_settings = environment_setup.atmosphe
 bodies = environment_setup.create_system_of_bodies(body_settings)
 
 ###########################################################################
-# CREATE VEHICLE ##########################################################
-###########################################################################
-
-# Create vehicle object
-bodies.create_empty_body( 'JUICE' )
-
-# Set mass of vehicle
-bodies.get_body( 'JUICE' ).mass = 2000.0
-    
-# Create aerodynamic coefficients interface (drag-only; zero side force and lift)
-reference_area = 100.0
-drag_coefficient = 1.2
-aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
-        reference_area,[ drag_coefficient, 0.0 , 0.0 ] )
-
-environment_setup.add_aerodynamic_coefficient_interface(
-                bodies, 'JUICE', aero_coefficient_settings )
-
-reference_area_radiation = reference_area
-radiation_pressure_coefficient = 1.2
-occulting_bodies = ["Ganymede"]
-radiation_pressure_settings = environment_setup.radiation_pressure.cannonball(
-    "Sun", reference_area_radiation, radiation_pressure_coefficient, occulting_bodies
-)
-
-environment_setup.add_radiation_pressure_interface(
-            bodies, "JUICE", radiation_pressure_settings
-)
-
-
-###########################################################################
 # CREATE ACCELERATIONS ####################################################
 ###########################################################################
 
 # Define bodies that are propagated, and their central bodies of propagation.
 bodies_to_propagate = ['Ganymede']
-central_bodies      = ['Jupiter']   # this is the body w.r. to the integrations are done
+central_bodies      = ['Jupiter']   # body around which the propapagtion is taken
 
 
+acceleration_settings_on_Ganymede_unperturbed = dict( ) # left empty on purpose
 
-acceleration_settings_on_ganymede = dict(
-    Jupiter=[propagation_setup.acceleration.point_mass_gravity()]  # create a list of possible accelerations you want. In this case you have one single body and his atmosphere
-)
+# define two distinct acceleration settings
+# CASE 1 : Create global accelerations dictionary.
+acceleration_settings_unperturbed = {'Ganymede':acceleration_settings_on_Ganymede_unperturbed}
 
-# there is no acceleration setting to be set on Ganymede. 
-# THIS DOESN'T MEAN THERE IS NO FORCE  
+# Create two distinct acceleration models.
+# CASE 1
+acceleration_models_unperturbed = propagation_setup.create_acceleration_models(
+        bodies, acceleration_settings_unperturbed, bodies_to_propagate, central_bodies)
 
-acceleration_settings_only_ganymede = {'Ganymede': acceleration_settings_on_ganymede}
-
-acceleration_models_only_ganymede = propagation_setup.create_acceleration_models(
-        bodies, acceleration_settings_only_ganymede, bodies_to_propagate, central_bodies)
 
 ###########################################################################
 # CREATE PROPAGATION SETTINGS #############################################
 ###########################################################################
 
-# Define initial state for Ganymede
-system_initial_state_ganymede = spice.get_body_cartesian_state_at_epoch(
-    target_body_name       ='Ganymede',
-    observer_body_name     ='Jupiter',
-    reference_frame_name   ='ECLIPJ2000',
-    aberration_corrections ='NONE',
+# Define initial state.
+# identical for both the cases
+
+
+initial_state_ganymede = spice.get_body_cartesian_state_at_epoch(
+    target_body_name='Ganymede',
+    observer_body_name='Jupiter',
+    reference_frame_name='ECLIPJ2000',
+    aberration_corrections='NONE',
     ephemeris_time= simulation_start_epoch )
 
-system_initial_state = system_initial_state_ganymede
-# Define required outputs (for both cases is the same)
-dependent_variables_to_save = [
-    propagation_setup.dependent_variable.relative_position('Ganymede','Jupiter')
-]
+initial_state = initial_state_ganymede
 
-#[aerodynamic(Ganymede),point_mass_gravity_type(Europa),point_mass_gravity_type(Callisto),point_mass_gravity_type(IO),point_mass_gravity_type(SUN),Solar_radiation(Sun),Spherical_harmonics(ganymede((00),(20),(22))),Spherical_harmonics(Jupiter((00),(20),(40)))]
-
-# note here you made the error of not creating a list. you should create  alist of outputs.
-# Read carefully the errors since they are really explicits when you know the type of each variable.
-
-
-# Create propagation settings.
+# Create propagation settings for the two cases
 termination_settings = propagation_setup.propagator.time_termination( simulation_end_epoch )
-propagator_settings_only_ganymede = propagation_setup.propagator.translational(
+
+#Case 1 : unperturbed
+propagator_settings_unperturbed = propagation_setup.propagator.translational(
     central_bodies,
-    acceleration_models_only_ganymede,
+    acceleration_models_unperturbed,
     bodies_to_propagate,
-    system_initial_state,
-    termination_settings,
-    output_variables = dependent_variables_to_save
+    initial_state,
+    termination_settings
 )
+
+
     
-# Create numerical integrator settings.
+# Create numerical integrator settings for both the cases
 fixed_step_size = 10.0
 integrator_settings = propagation_setup.integrator.runge_kutta_4(
     simulation_start_epoch,
@@ -162,22 +135,34 @@ integrator_settings = propagation_setup.integrator.runge_kutta_4(
 # PROPAGATE ORBIT #########################################################
 ###########################################################################
 
+# Create simulation object and propagate dynamics
 
-# Create simulation object and propagate dynamics.
-dynamics_simulator_only_ganymede = numerical_simulation.SingleArcSimulator(
-    bodies, integrator_settings, propagator_settings_only_ganymede)
-
-simulation_result_only_ganymede     = dynamics_simulator_only_ganymede.state_history
-dependent_variables_only_ganymede   = dynamics_simulator_only_ganymede.dependent_variable_history  # here you define a ditionary
-# the structure of this dictionary is the following
-# keyword are the time stumps
-# the values are lists of kepler elemnts at each time stamp
+# Case 1 : unperturbed
+dynamics_simulator_unperturbed = numerical_simulation.SingleArcSimulator(
+    bodies, integrator_settings, propagator_settings_unperturbed )
 
 
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_only_ganymede,
-         filename='test_on_ganymede.dat',
-         directory='./OUTPUTFILES'
-         )
+simulation_result_unperturbed = dynamics_simulator_unperturbed.state_history
 
+
+case1_sol = result2array(simulation_result_unperturbed)
+print(np.log(np.abs(case1_sol)))
+
+print(np.shape(case1_sol))
+
+# xg,yg,zg = case1_sol[:,7:10].reshape((3,-1))
+fig,ax=plt.subplots(3,1)
+xj,yj,zj = case1_sol[:,1:4].reshape((3,-1))
+ax[0].plot(xj)
+ax[0].set_xlabel('time')
+ax[0].set_ylabel('x')
+ax[1].plot(yj)
+ax[0].set_xlabel('time')
+ax[0].set_ylabel('y')
+ax[2].plot(zj)
+ax[0].set_xlabel('time')
+ax[0].set_ylabel('z')
+fig.suptitle('Ganymede propagation in the absence of accelerations')
+plt.tight_layout()
+plt.show()

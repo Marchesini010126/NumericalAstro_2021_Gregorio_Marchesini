@@ -58,14 +58,14 @@ simulation_end_epoch = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 2
 spice.load_standard_kernels() # load the kernel?
 
 # Create settings for celestial bodies
-bodies_to_create = ['Ganymede']         # this must have a list of all the planets to create
-global_frame_origin = 'Ganymede'        # this is the origin of the refernce system
+bodies_to_create         = ['Ganymede']         # this must have a list of all the planets to create
+global_frame_origin      = 'Ganymede'        # this is the origin of the refernce system
 global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
-body_settings = environment_setup.get_default_body_settings(
+body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
 # Add Ganymede exponential atmosphere
-density_scale_height = 40.0E3
+density_scale_height     = 40.0E3
 density_at_zero_altitude = 2.0E-9
 body_settings.get( 'Ganymede' ).atmosphere_settings = environment_setup.atmosphere.exponential( 
         density_scale_height, density_at_zero_altitude)
@@ -84,8 +84,8 @@ bodies.create_empty_body( 'JUICE' )
 bodies.get_body( 'JUICE' ).mass = 2000.0
     
 # Create aerodynamic coefficients interface (drag-only; zero side force and lift)
-reference_area = 100.0
-drag_coefficient = 1.2
+reference_area            = 100.0
+drag_coefficient          = 1.2
 aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
         reference_area,[ drag_coefficient, 0.0 , 0.0 ] )
 environment_setup.add_aerodynamic_coefficient_interface(
@@ -97,7 +97,7 @@ environment_setup.add_aerodynamic_coefficient_interface(
 
 # Define bodies that are propagated, and their central bodies of propagation.
 bodies_to_propagate = ['JUICE']
-central_bodies      = ['Ganymede']   # bodies which are contributing with the full gravity and are not only perturbation
+central_bodies      = ['Ganymede']   # body around which the propapagtion is taken
 
 # Define accelerations acting on vehicle.
 acceleration_settings_on_juice = dict(

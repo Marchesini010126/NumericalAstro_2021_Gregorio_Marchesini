@@ -47,7 +47,7 @@ B = 2
 C = 4
 
 simulation_start_epoch = 33.15 * constants.JULIAN_YEAR + A * 7.0 * constants.JULIAN_DAY + B * constants.JULIAN_DAY + C * constants.JULIAN_DAY / 24.0
-simulation_end_epoch = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 24.0
+simulation_end_epoch   = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 24.0
 
 ###########################################################################
 # CREATE ENVIRONMENT ######################################################
@@ -57,10 +57,10 @@ simulation_end_epoch = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 2
 spice.load_standard_kernels() # load the kernel?
 
 # Create settings for celestial bodies
-bodies_to_create = ['Ganymede','Sun','Io','Callisto','Europa','Jupiter','Saturn']         # this must have a list of all the planets to create
-global_frame_origin = 'Jupiter'        # this is the origin of the refernce system
+bodies_to_create         = ['Ganymede','Sun','Io','Callisto','Europa','Jupiter','Saturn']         # this must have a list of all the planets to create
+global_frame_origin      = 'Jupiter'        # this is the origin of the refernce system
 global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
-body_settings = environment_setup.get_default_body_settings(
+body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
 # Add Ganymede exponential atmosphere
@@ -83,18 +83,18 @@ bodies.create_empty_body( 'JUICE' )
 bodies.get_body( 'JUICE' ).mass = 2000.0
     
 # Create aerodynamic coefficients interface (drag-only; zero side force and lift)
-reference_area = 100.0
-drag_coefficient = 1.2
+reference_area            = 100.0
+drag_coefficient          = 1.2
 aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
         reference_area,[ drag_coefficient, 0.0 , 0.0 ] )
 
 environment_setup.add_aerodynamic_coefficient_interface(
                 bodies, 'JUICE', aero_coefficient_settings )
 
-reference_area_radiation = reference_area
+reference_area_radiation       = reference_area
 radiation_pressure_coefficient = 1.2
-occulting_bodies = ["Ganymede"]
-radiation_pressure_settings = environment_setup.radiation_pressure.cannonball(
+occulting_bodies               = ["Ganymede"]
+radiation_pressure_settings    = environment_setup.radiation_pressure.cannonball(
     "Sun", reference_area_radiation, radiation_pressure_coefficient, occulting_bodies
 )
 
@@ -108,13 +108,13 @@ environment_setup.add_radiation_pressure_interface(
 ###########################################################################
 
 # Define bodies that are propagated, and their central bodies of propagation.
-bodies_to_propagate = ['JUICE']
-central_bodies      = ['Jupiter']   
-
-
+bodies_to_propagate = ['JUICE']      # body to propagate
+central_bodies      = ['Jupiter']    # central body used as arefernce for the propagation
 
 # Define accelerations acting on vehicle
 # acceleration in the case of "all planets" perturbation
+
+# note this is quite similar to what you will get from spice because it is more close to the real dynamics
 acceleration_settings_on_juice_all_planets = dict(
     Ganymede =[propagation_setup.acceleration.spherical_harmonic_gravity(2,2),
                 propagation_setup.acceleration.aerodynamic()],  
@@ -128,13 +128,15 @@ acceleration_settings_on_juice_all_planets = dict(
 )
 
 # acceleration in the case of ganymede two body problem
+# this is less similar to the real dynamics of the system
+# remember that ganymede will only more thanks to tabulated values 
 acceleration_settings_on_juice_only_ganymede = dict(
-    Ganymede=[propagation_setup.acceleration.point_mass_gravity()]  # create a list of possible accelerations you want. In this case you have one single body and his atmosphere
+    Ganymede=[propagation_setup.acceleration.point_mass_gravity()] 
 )
 
 # Create global accelerations dictionary for the two cases
-acceleration_settings_all_planets   = {'JUICE': acceleration_settings_on_juice_all_planets}
-acceleration_settings_only_ganymede = {'JUICE': acceleration_settings_on_juice_only_ganymede}
+acceleration_settings_all_planets   = {'JUICE': acceleration_settings_on_juice_all_planets}   # accelerations from all the planets
+acceleration_settings_only_ganymede = {'JUICE': acceleration_settings_on_juice_only_ganymede} # single planet acceleration
 
 # Create acceleration models.
 acceleration_models_all_planets = propagation_setup.create_acceleration_models(

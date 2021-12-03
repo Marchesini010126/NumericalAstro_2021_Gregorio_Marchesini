@@ -148,7 +148,7 @@ system_initial_state = spice.get_body_cartesian_state_at_epoch(
 
 ## harmonics LIST
 
-sph_list = [(b,0) for b in range(0,5)]; # juppiter m_max = 0 l_max = 12
+sph_list = [(0,0),(2,0),(4,0)]; # juppiter m_max = 0 l_max = 12
 
 # Define required outputs
 
@@ -156,7 +156,7 @@ dependent_variables_to_saveI = [
     propagation_setup.dependent_variable.single_acceleration_norm(
     propagation_setup.acceleration.point_mass_gravity_type,'JUICE','Ganymede'),
     propagation_setup.dependent_variable.spherical_harmonic_terms_acceleration(
-    'JUICE','Jupiter',sph_list),
+    'JUICE','Jupiter',sph_list)
 ]
 
 dependent_variables_to_saveII = [
@@ -225,44 +225,31 @@ dependent_variablesII = dynamics_simulatorII.dependent_variable_history  # here 
 # SAVE RESULTS ############################################################
 ###########################################################################
 
-save2txt(solution=simulation_resultI,
-         filename='JUICEPropagationHistory_Q4I.dat',
-         directory='./'
-         )
 
-save2txt(solution=dependent_variablesI,
-         filename='JUICEPropagationHistory_DependentVariables_Q4I.dat',
-         directory='./'
-         )
-save2txt(solution=simulation_resultII,
-         filename='JUICEPropagationHistory_Q4II.dat',
-         directory='./'
-         )
-
-save2txt(solution=dependent_variablesII,
-         filename='JUICEPropagationHistory_DependentVariables_Q4II.dat',
-         directory='./'
-         )
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
 save2txt(solution=simulation_resultI,
          filename='JUICE_cartesianstate_Q4I.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 save2txt(solution=dependent_variablesI,
          filename='JUICE_accelerations_Q4I.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 save2txt(solution=simulation_resultII,
          filename='JUICE_cartesianstate_Q4II.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 save2txt(solution=dependent_variablesII,
          filename='JUICE_accelerations_Q4II.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
+
+
+
 
 
 ###########################################################################

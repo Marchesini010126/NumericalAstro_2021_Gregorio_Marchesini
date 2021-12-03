@@ -6,7 +6,7 @@
 #
 ###########################################################################
 
-
+#%%
 ''' 
 Copyright (c) 2010-2020, Delft University of Technology
 All rights reserved
@@ -38,8 +38,7 @@ from tudatpy.kernel.interface import spice
 from tudatpy.kernel import numerical_simulation # KC: newly added by me
 from tudatpy.kernel.numerical_simulation import environment_setup
 from tudatpy.kernel.numerical_simulation import propagation_setup
-
-
+from tudatpy.util import result2array
 
 # # student number: 1244779 --> 1244ABC
 A = 8
@@ -47,6 +46,7 @@ B = 2
 C = 4
 
 simulation_start_epoch = 33.15 * constants.JULIAN_YEAR + A * 7.0 * constants.JULIAN_DAY + B * constants.JULIAN_DAY + C * constants.JULIAN_DAY / 24.0
+print(simulation_start_epoch)
 simulation_end_epoch = simulation_start_epoch + 344.0 * constants.JULIAN_DAY / 24.0
 
 ###########################################################################
@@ -184,7 +184,12 @@ dependent_variables_to_save = [
     
     propagation_setup.dependent_variable.spherical_harmonic_terms_acceleration_norm(
     'JUICE','Jupiter',[(0,0), (2,0), (4,0)]),
-
+    propagation_setup.dependent_variable.relative_position(
+    'JUICE','Sun'),
+    propagation_setup.dependent_variable.relative_position(
+    'Ganymede','Sun'),
+    propagation_setup.dependent_variable.keplerian_state(
+    'JUICE','Ganymede')
 ]
 
 #[aerodynamic(Ganymede),point_mass_gravity_type(Europa),point_mass_gravity_type(Callisto),point_mass_gravity_type(IO),point_mass_gravity_type(SUN),Solar_radiation(Sun),Spherical_harmonics(ganymede((00),(20),(22))),Spherical_harmonics(Jupiter((00),(20),(40)))]
@@ -229,52 +234,52 @@ dependent_variables = dynamics_simulator.dependent_variable_history  # here you 
 # SAVE RESULTS ############################################################
 ###########################################################################
 
-save2txt(solution=simulation_result,
-         filename='JUICEPropagationHistory_Q3.dat',
-         directory='./'
-         )
-
-save2txt(solution=dependent_variables,
-         filename='JUICEPropagationHistory_DependentVariables_Q3.dat',
-         directory='./'
-         )
-
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 save2txt(solution=simulation_result,
          filename='JUICE_cartesianstate_Q3.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 save2txt(solution=dependent_variables,
          filename='JUICE_accelerations_Q3.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 
-###########################################################################
-# PLOT RESULTS ############################################################
-###########################################################################
+##########################################################################
+#PLOT RESULTS ############################################################
+##########################################################################
 
-import matplotlib.ticker as mticker
+# import matplotlib.ticker as mticker
 
-# Extract time and Kepler elements from dependent variables
-kepler_elements = np.vstack(list(dependent_variables.values()))
-time            = np.array(list(dependent_variables.keys()))
-time_days       = [ t / constants.JULIAN_DAY - simulation_start_epoch / constants.JULIAN_DAY for t in time ]
+# # Extract time and Kepler elements from dependent variables
+# kepler_elements = np.vstack(list(dependent_variables.values()))
+# time            = np.array(list(dependent_variables.keys()))
+# time_days       = [ t / constants.JULIAN_DAY - simulation_start_epoch / constants.JULIAN_DAY for t in time ]
 
-## only if you want to plot in python
+# #%%
+# solution=result2array(dependent_variables)
+# Dsj = solution[:,-7]
+# kepler_elements = solution[:,15:]
 
-# fig,ax     =plt.subplots(3,2,figsize=(10,6))
+
+# fig,ax = plt.subplots()
+# ax.plot(time_days,Dsj)
+# plt.show()
+# # only if you want to plot in python
+
+# fig1,ax1     =plt.subplots(3,2,figsize=(10,6))
 # elements   =[r'$a\left[km\right]    $',r'$e$',r'$i\left[rad\right]$',r'$\omega\left[rad\right]$',r'$\Omega\left[rad\right]$',r'$\theta\left[rad\right]$']
 # indxmatrix =np.arange(6).reshape(3,2)
 # f = mticker.ScalarFormatter(useOffset=False, useMathText=True)
 # g = lambda x,pos : "${}$".format(f._formatSciNotation('%1.10e' % x))
 # for ii in range(3):
 #     for jj in range(2):
-#       ax[ii,jj].plot(time_days,kepler_elements[:,indxmatrix[ii,jj]])
-#       ax[ii,jj].set_xlabel('t [days]')
-#       ax[ii,jj].set_xlabel(elements[indxmatrix[ii][jj]])
-#       ax[ii,jj].get_yaxis().get_major_formatter().set_useOffset(False)
-#       ax[ii,jj].set_yticks(np.linspace(min(kepler_elements[:,indxmatrix[ii,jj]]),max(kepler_elements[:,indxmatrix[ii,jj]]),4))
+#       ax1[ii,jj].plot(time_days,kepler_elements[:,indxmatrix[ii,jj]])
+#       ax1[ii,jj].set_xlabel('t [days]')
+#       ax1[ii,jj].set_xlabel(elements[indxmatrix[ii][jj]])
+#       ax1[ii,jj].get_yaxis().get_major_formatter().set_useOffset(False)
+#       ax1[ii,jj].set_yticks(np.linspace(min(kepler_elements[:,indxmatrix[ii,jj]]),max(kepler_elements[:,indxmatrix[ii,jj]]),4))
 # plt.tight_layout()
 # plt.show()
 

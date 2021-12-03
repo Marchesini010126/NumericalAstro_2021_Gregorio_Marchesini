@@ -72,7 +72,7 @@ bodies.create_empty_body( 'JUICE' )
 bodies.get_body( 'JUICE' ).mass = 2000.0
     
 # Create aerodynamic coefficients interface (drag-only; zero side force and lift)
-reference_area = 100.0
+reference_area = 100.0 # m^2
 drag_coefficient = 1.2
 aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
         reference_area,[ drag_coefficient, 0.0 , 0.0 ] )
@@ -227,11 +227,16 @@ domega_dt   =   3*mean_motion*ganymede_reference_radius**2*ganymede_j2/(4*a_av**
 OmegaAnalyticalDynamics = Omega0 + dOmega_dt*(time-time[0]) # rad
 omegaAnalyticalDynamics = omega0 + domega_dt*(time-time[0])  # rad
 
-with open('./OUTPUTFILES/OmegaAnalyticalDynamics.txt', 'wb') as f:
-        np.savetxt('./OUTPUTFILES/OmegaAnalyticalDynamics.txt',OmegaAnalyticalDynamics)
 
-with open('./OUTPUTFILES/omegaSmallAnalyticalDynamics.txt', 'wb') as f:
-        np.savetxt('./OUTPUTFILES/omegaSmallAnalyticalDynamics.txt',omegaAnalyticalDynamics)
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+file_path1     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/OmegaAnalyticalDynamics.txt'
+file_path2     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/omegaSmallAnalyticalDynamics.txt'
+
+with open(file_path1 , 'wb') as f:
+        np.savetxt(file_path1 ,OmegaAnalyticalDynamics)
+
+with open(file_path2, 'wb') as f:
+        np.savetxt(file_path2,omegaAnalyticalDynamics)
 
 
 

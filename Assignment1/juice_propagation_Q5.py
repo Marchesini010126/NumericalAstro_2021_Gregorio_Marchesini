@@ -6,7 +6,6 @@
 #
 ###########################################################################
 
-
 ''' 
 Copyright (c) 2010-2020, Delft University of Technology
 All rights reserved
@@ -64,8 +63,9 @@ body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
 # Add Ganymede exponential atmosphere
-density_scale_height = 40.0E3
+density_scale_height     = 40.0E3
 density_at_zero_altitude = 2.0E-9
+
 body_settings.get( 'Ganymede' ).atmosphere_settings = environment_setup.atmosphere.exponential( 
         density_scale_height, density_at_zero_altitude)
 
@@ -115,7 +115,7 @@ central_bodies      = ['Jupiter']    # central body used as arefernce for the pr
 # acceleration in the case of "all planets" perturbation
 
 # note this is quite similar to what you will get from spice because it is more close to the real dynamics
-acceleration_settings_on_juice_all_planets = dict(
+acceleration_settings_on_juice_perturbed = dict(
     Ganymede =[propagation_setup.acceleration.spherical_harmonic_gravity(2,2),
                 propagation_setup.acceleration.aerodynamic()],  
     Jupiter  =[propagation_setup.acceleration.spherical_harmonic_gravity(4,0)],
@@ -124,25 +124,25 @@ acceleration_settings_on_juice_all_planets = dict(
                propagation_setup.acceleration.cannonball_radiation_pressure()],
     Europa   =[propagation_setup.acceleration.point_mass_gravity()],
     Io       =[propagation_setup.acceleration.point_mass_gravity()],
-    Callisto =[propagation_setup.acceleration.point_mass_gravity()],
-)
+    Callisto =[propagation_setup.acceleration.point_mass_gravity()]
+    )
 
 # acceleration in the case of ganymede two body problem
 # this is less similar to the real dynamics of the system
 # remember that ganymede will only more thanks to tabulated values 
-acceleration_settings_on_juice_only_ganymede = dict(
+acceleration_settings_on_juice_unperturbed = dict(
     Ganymede=[propagation_setup.acceleration.point_mass_gravity()] 
 )
 
 # Create global accelerations dictionary for the two cases
-acceleration_settings_all_planets   = {'JUICE': acceleration_settings_on_juice_all_planets}   # accelerations from all the planets
-acceleration_settings_only_ganymede = {'JUICE': acceleration_settings_on_juice_only_ganymede} # single planet acceleration
+acceleration_settings_perturbed   = {'JUICE': acceleration_settings_on_juice_perturbed}   # accelerations from all the planets
+acceleration_settings_unperturbed = {'JUICE': acceleration_settings_on_juice_unperturbed} # single planet acceleration
 
 # Create acceleration models.
-acceleration_models_all_planets = propagation_setup.create_acceleration_models(
-        bodies, acceleration_settings_all_planets, bodies_to_propagate, central_bodies)
-acceleration_models_only_ganymede = propagation_setup.create_acceleration_models(
-        bodies, acceleration_settings_only_ganymede, bodies_to_propagate, central_bodies)
+acceleration_models_perturbed  = propagation_setup.create_acceleration_models(
+        bodies, acceleration_settings_perturbed, bodies_to_propagate, central_bodies)
+acceleration_models_unperturbed  = propagation_setup.create_acceleration_models(
+        bodies, acceleration_settings_unperturbed, bodies_to_propagate, central_bodies)
 
 ###########################################################################
 # CREATE PROPAGATION SETTINGS #############################################
@@ -158,23 +158,24 @@ system_initial_state = spice.get_body_cartesian_state_at_epoch(
 
 # Define required outputs (for both cases is the same)
 dependent_variables_to_save = [
-    propagation_setup.dependent_variable.relative_position('Ganymede','Jupiter')
+    propagation_setup.dependent_variable.relative_position('Ganymede','Jupiter'),
+    propagation_setup.dependent_variable.relative_velocity('Ganymede','Jupiter')
 ]
 
 
 # Create propagation settings.
 termination_settings            = propagation_setup.propagator.time_termination( simulation_end_epoch )
-propagator_settings_all_planets = propagation_setup.propagator.translational(
+propagator_settings_perturbed  = propagation_setup.propagator.translational(
     central_bodies,
-    acceleration_models_all_planets,
+    acceleration_models_perturbed ,
     bodies_to_propagate,
     system_initial_state,
     termination_settings,
     output_variables = dependent_variables_to_save
 )
-propagator_settings_only_ganymede = propagation_setup.propagator.translational(
+propagator_settings_unperturbed  = propagation_setup.propagator.translational(
     central_bodies,
-    acceleration_models_only_ganymede,
+    acceleration_models_unperturbed ,
     bodies_to_propagate,
     system_initial_state,
     termination_settings,
@@ -193,40 +194,45 @@ integrator_settings = propagation_setup.integrator.runge_kutta_4(
 ###########################################################################
 
 # Create simulation object and propagate dynamics.
-dynamics_simulator_all_planets = numerical_simulation.SingleArcSimulator(
-    bodies, integrator_settings, propagator_settings_all_planets )
+dynamics_simulator_perturbed  = numerical_simulation.SingleArcSimulator(
+    bodies, integrator_settings, propagator_settings_perturbed  )
 
 # Create simulation object and propagate dynamics.
-dynamics_simulator_only_ganymede = numerical_simulation.SingleArcSimulator(
-    bodies, integrator_settings, propagator_settings_only_ganymede)
+dynamics_simulator_unperturbed  = numerical_simulation.SingleArcSimulator(
+    bodies, integrator_settings, propagator_settings_unperturbed )
 
-simulation_result_all_planets       = dynamics_simulator_all_planets.state_history
-dependent_variables_all_planets     = dynamics_simulator_all_planets.dependent_variable_history  # here you define a ditionary
-simulation_result_only_ganymede     = dynamics_simulator_only_ganymede.state_history
-dependent_variables_only_ganymede   = dynamics_simulator_only_ganymede.dependent_variable_history  # here you define a ditionary
+simulation_result_perturbed        = dynamics_simulator_perturbed .state_history
+dependent_variables_perturbed      = dynamics_simulator_perturbed .dependent_variable_history  # here you define a ditionary
+simulation_result_unperturbed      = dynamics_simulator_unperturbed .state_history
+dependent_variables_unperturbed    = dynamics_simulator_unperturbed .dependent_variable_history  # here you define a ditionary
 # the structure of this dictionary is the following
 # keyword are the time stumps
 # the values are lists of kepler elemnts at each time stamp
 
-save2txt(solution=dependent_variables_all_planets,
+
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+
+
+
+save2txt(solution=dependent_variables_perturbed ,
          filename='Ganymede_wrt_Jupiter_perturbed_case_Q5iv.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 # w.r.t jupiter
-save2txt(solution=simulation_result_all_planets,
+save2txt(solution=simulation_result_perturbed ,
          filename='JUICE_cartesianstate_Q5iv.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 
-save2txt(solution=dependent_variables_only_ganymede,
+save2txt(solution=dependent_variables_unperturbed,
          filename='Ganymede_wrt_Jupiter_unperturbed_case_Q5ii.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 # w.r.t jupiter
-save2txt(solution=simulation_result_only_ganymede,
+save2txt(solution=simulation_result_unperturbed,
          filename='JUICE_cartesianstate_Q5ii.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )

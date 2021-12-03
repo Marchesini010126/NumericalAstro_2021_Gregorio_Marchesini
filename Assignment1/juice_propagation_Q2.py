@@ -60,7 +60,7 @@ spice.load_standard_kernels() # load the kernel?
 # Create settings for celestial bodies
 bodies_to_create         = ['Ganymede']         # this must have a list of all the planets to create
 global_frame_origin      = 'Ganymede'        # this is the origin of the refernce system
-global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
+global_frame_orientation = 'ECLIPJ2000'  # orientation of the reference system
 body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
@@ -82,14 +82,7 @@ bodies.create_empty_body( 'JUICE' )
 
 # Set mass of vehicle
 bodies.get_body( 'JUICE' ).mass = 2000.0
-    
-# Create aerodynamic coefficients interface (drag-only; zero side force and lift)
-reference_area            = 100.0
-drag_coefficient          = 1.2
-aero_coefficient_settings = environment_setup.aerodynamic_coefficients.constant(
-        reference_area,[ drag_coefficient, 0.0 , 0.0 ] )
-environment_setup.add_aerodynamic_coefficient_interface(
-                bodies, 'JUICE', aero_coefficient_settings )
+
 
 ###########################################################################
 # CREATE ACCELERATIONS ####################################################
@@ -173,24 +166,18 @@ dependent_variables = dynamics_simulator.dependent_variable_history  # here you 
 # SAVE RESULTS ############################################################
 ###########################################################################
 
-save2txt(solution=simulation_result,
-         filename='JUICEPropagationHistory_Q2.dat',
-         directory='./'
-         )
 
-save2txt(solution=dependent_variables,
-         filename='JUICEPropagationHistory_DependentVariables_Q2.dat',
-         directory='./'
-         )
+
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
 save2txt(solution=simulation_result,
          filename='JUICE_cartesianstate_Q2.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 save2txt(solution=dependent_variables,
          filename='JUICE_KeplerElemets_Q2.dat',
-         directory='./OUTPUTFILES'
+         directory=directory_path
          )
 
 ###########################################################################

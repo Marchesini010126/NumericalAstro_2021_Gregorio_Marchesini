@@ -38,7 +38,6 @@ from tudatpy.kernel.interface import spice
 from tudatpy.kernel import numerical_simulation # KC: newly added by me
 from tudatpy.kernel.numerical_simulation import environment_setup
 from tudatpy.kernel.numerical_simulation import propagation_setup
-from tudatpy.util import result2array
 
 
 # # student number: 1244779 --> 1244ABC
@@ -58,7 +57,7 @@ spice.load_standard_kernels() # load the kernel?
 
 # Create settings for celestial bodies
 bodies_to_create         = ['Ganymede','Sun','Io','Callisto','Europa','Jupiter','Saturn']         # this must have a list of all the planets to create
-global_frame_origin      = 'Jupiter'        # this is the origin of the refernce system
+global_frame_origin      = 'Jupiter'        # this is the origin of the reference system
 global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
 body_settings            = environment_setup.get_default_body_settings(
     bodies_to_create, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
@@ -221,12 +220,42 @@ dynamics_simulator_perturbed = numerical_simulation.SingleArcSimulator(
 simulation_result_unperturbed = dynamics_simulator_unperturbed.state_history
 simulation_result_perturbed = dynamics_simulator_perturbed.state_history
 
-case2_sol = result2array(simulation_result_perturbed)
-print(np.log(np.abs(case2_sol)))
+
+directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+
+# w.r.t jupiter
+save2txt(solution=simulation_result_unperturbed,
+         filename='JUICE_cartesianstate_unperturbed_Q6.dat',
+         directory=directory_path
+         )
+
+# w.r.t jupiter
+save2txt(solution=simulation_result_perturbed,
+         filename='JUICE_cartesianstate_perturbed_Q6.dat',
+         directory=directory_path
+         )
 
 
-x,y,z = case2_sol[:,1:4].reshape((3,-1))
-plt.plot(x)
-plt.plot(y)
-plt.plot(z)
-plt.show()
+
+
+
+# xu,yu,zu = case1_sol[:,7:10].T
+# xp,yp,zp = case2_sol[:,7:10].T
+
+
+# fig,ax=plt.subplots(3,1)
+# ax[0].plot(xp)
+# ax[0].plot(xu)
+# ax[0].set_xlabel('time')
+# ax[0].set_ylabel('x')
+# ax[1].plot(yp)
+# ax[1].plot(yu)
+# ax[1].set_xlabel('time')
+# ax[1].set_ylabel('y')
+# ax[2].plot(zp)
+# ax[2].plot(zu)
+# ax[2].set_xlabel('time')
+# ax[2].set_ylabel('z')
+# fig.suptitle('Ganymede propagation in the absence of accelerations')
+# plt.tight_layout()
+# plt.show()

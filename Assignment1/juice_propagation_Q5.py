@@ -210,29 +210,29 @@ dependent_variables_unperturbed    = dynamics_simulator_unperturbed .dependent_v
 # the values are lists of kepler elemnts at each time stamp
 
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
 
 
-save2txt(solution=dependent_variables_perturbed ,
-         filename='Ganymede_wrt_Jupiter_perturbed_case_Q5iv.dat',
-         directory=directory_path
-         )
+# save2txt(solution=dependent_variables_perturbed ,
+#          filename='Ganymede_wrt_Jupiter_perturbed_case_Q5iv.dat',
+#          directory=directory_path
+#          )
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_perturbed ,
-         filename='JUICE_cartesianstate_Q5iv.dat',
-         directory=directory_path
-         )
+# # w.r.t jupiter
+# save2txt(solution=simulation_result_perturbed ,
+#          filename='JUICE_cartesianstate_Q5iv.dat',
+#          directory=directory_path
+#          )
 
 
-save2txt(solution=dependent_variables_unperturbed,
-         filename='Ganymede_wrt_Jupiter_unperturbed_case_Q5ii.dat',
-         directory=directory_path
-         )
+# save2txt(solution=dependent_variables_unperturbed,
+#          filename='Ganymede_wrt_Jupiter_unperturbed_case_Q5ii.dat',
+#          directory=directory_path
+#          )
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_unperturbed,
-         filename='JUICE_cartesianstate_Q5ii.dat',
-         directory=directory_path
-         )
+# # w.r.t jupiter
+# save2txt(solution=simulation_result_unperturbed,
+#          filename='JUICE_cartesianstate_Q5ii.dat',
+#          directory=directory_path
+#          )

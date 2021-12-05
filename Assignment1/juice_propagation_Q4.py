@@ -226,37 +226,37 @@ dependent_variablesII = dynamics_simulatorII.dependent_variable_history  # here 
 ###########################################################################
 
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
-save2txt(solution=simulation_resultI,
-         filename='JUICE_cartesianstate_Q4I.dat',
-         directory=directory_path
-         )
+# save2txt(solution=simulation_resultI,
+#          filename='JUICE_cartesianstate_Q4I.dat',
+#          directory=directory_path
+#          )
 
-save2txt(solution=dependent_variablesI,
-         filename='JUICE_accelerations_Q4I.dat',
-         directory=directory_path
-         )
+# save2txt(solution=dependent_variablesI,
+#          filename='JUICE_accelerations_Q4I.dat',
+#          directory=directory_path
+#          )
 
-save2txt(solution=simulation_resultII,
-         filename='JUICE_cartesianstate_Q4II.dat',
-         directory=directory_path
-         )
+# save2txt(solution=simulation_resultII,
+#          filename='JUICE_cartesianstate_Q4II.dat',
+#          directory=directory_path
+#          )
 
-save2txt(solution=dependent_variablesII,
-         filename='JUICE_accelerations_Q4II.dat',
-         directory=directory_path
-         )
-
-
+# save2txt(solution=dependent_variablesII,
+#          filename='JUICE_accelerations_Q4II.dat',
+#          directory=directory_path
+#          )
 
 
 
-###########################################################################
-# PLOT RESULTS ############################################################
-###########################################################################
 
-# import matplotlib.ticker as mticker
+
+# ###########################################################################
+# # PLOT RESULTS ############################################################
+# ###########################################################################
+
+# # import matplotlib.ticker as mticker
 
 # # Extract time and Kepler elements from dependent variables
 # kepler_elements = np.vstack(list(dependent_variables.values()))

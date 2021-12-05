@@ -5,7 +5,6 @@
 # # Assignment 1 - Propagation Settings
 #
 ###########################################################################
-#%%
 
 ''' 
 Copyright (c) 2010-2020, Delft University of Technology
@@ -228,15 +227,18 @@ OmegaAnalyticalDynamics = Omega0 + dOmega_dt*(time-time[0]) # rad
 omegaAnalyticalDynamics = omega0 + domega_dt*(time-time[0])  # rad
 
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
-file_path1     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/OmegaAnalyticalDynamics.txt'
-file_path2     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/omegaSmallAnalyticalDynamics.txt'
 
-with open(file_path1 , 'wb') as f:
-        np.savetxt(file_path1 ,OmegaAnalyticalDynamics)
+# SAVE THE OUTPUT
+# HERE YOU NEED TO ADD YOU DESIRED PATH FOR SAVING THE FILES
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# file_path1     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/OmegaAnalyticalDynamics.txt'
+# file_path2     = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/omegaSmallAnalyticalDynamics.txt'
 
-with open(file_path2, 'wb') as f:
-        np.savetxt(file_path2,omegaAnalyticalDynamics)
+# with open(file_path1 , 'wb') as f:
+#         np.savetxt(file_path1 ,OmegaAnalyticalDynamics)
+
+# with open(file_path2, 'wb') as f:
+#         np.savetxt(file_path2,omegaAnalyticalDynamics)
 
 
 

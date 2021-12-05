@@ -205,37 +205,35 @@ r_dotdot3 = -9*jupiter_mu*ganymede_reference_radius**2/semimajor**4*ganymede_unn
 dn3       = -r_dotdot3/2*np.sqrt(semimajor/jupiter_mu)
 
 
-print(dn1,dn2,dn3)
-
-print()
 
 
-##
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
-file1_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/parameters.txt'
-save2txt(solution=simulation_result_unperturbed,
-         filename='JUICE_cartesianstate_unperturbed_Q7.dat',
-         directory=directory_path
-         )
-save2txt(solution=dependent_variables_unperturbed,
-         filename='JUICE_keplerelement_unperturbed_Q7.dat',
-         directory=directory_path
-         )
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_perturbed,
-         filename='JUICE_cartesianstate_perturbed_Q7.dat',
-         directory=directory_path
-         )
+# ##
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# file1_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES/parameters.txt'
+# save2txt(solution=simulation_result_unperturbed,
+#          filename='JUICE_cartesianstate_unperturbed_Q7.dat',
+#          directory=directory_path
+#          )
+# save2txt(solution=dependent_variables_unperturbed,
+#          filename='JUICE_keplerelement_unperturbed_Q7.dat',
+#          directory=directory_path
+#          )
 
-# w.r.t jupiter
-save2txt(solution=dependent_variables_perturbed,
-         filename='JUICE_keplerelement_perturbed_Q7.dat',
-         directory=directory_path
-         )
+# # w.r.t jupiter
+# save2txt(solution=simulation_result_perturbed,
+#          filename='JUICE_cartesianstate_perturbed_Q7.dat',
+#          directory=directory_path
+#          )
+
+# # w.r.t jupiter
+# save2txt(solution=dependent_variables_perturbed,
+#          filename='JUICE_keplerelement_perturbed_Q7.dat',
+#          directory=directory_path
+#          )
 
 
-with open( file1_path, 'wb') as f:
-        np.savetxt(file1_path ,parameters_matrix)
+# with open( file1_path, 'wb') as f:
+#         np.savetxt(file1_path ,parameters_matrix)
 
         

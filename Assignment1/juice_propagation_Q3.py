@@ -234,21 +234,21 @@ dependent_variables = dynamics_simulator.dependent_variable_history  # here you 
 # SAVE RESULTS ############################################################
 ###########################################################################
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
-save2txt(solution=simulation_result,
-         filename='JUICE_cartesianstate_Q3.dat',
-         directory=directory_path
-         )
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# save2txt(solution=simulation_result,
+#          filename='JUICE_cartesianstate_Q3.dat',
+#          directory=directory_path
+#          )
 
-save2txt(solution=dependent_variables,
-         filename='JUICE_accelerations_Q3.dat',
-         directory=directory_path
-         )
+# save2txt(solution=dependent_variables,
+#          filename='JUICE_accelerations_Q3.dat',
+#          directory=directory_path
+#          )
 
 
-##########################################################################
-#PLOT RESULTS ############################################################
-##########################################################################
+# ##########################################################################
+# #PLOT RESULTS ############################################################
+# ##########################################################################
 
 # import matplotlib.ticker as mticker
 

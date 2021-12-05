@@ -125,7 +125,9 @@ system_initial_state = spice.get_body_cartesian_state_at_epoch(
     ephemeris_time= simulation_start_epoch )
 
 # Define required outputs
-dependent_variables_to_save = [propagation_setup.dependent_variable.keplerian_state('JUICE','Ganymede')]
+dependent_variables_to_save = [propagation_setup.dependent_variable.keplerian_state('JUICE','Ganymede'),
+                               propagation_setup.dependent_variable.single_acceleration(
+                               propagation_setup.acceleration.point_mass_gravity_type,'JUICE','Ganymede')]
 # note here you made the error of not creating a list. you should create  alist of outputs.
 # Read carefully the errors since they are really explicits when you know the type of each variable.
 
@@ -168,28 +170,28 @@ dependent_variables = dynamics_simulator.dependent_variable_history  # here you 
 
 
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
-save2txt(solution=simulation_result,
-         filename='JUICE_cartesianstate_Q2.dat',
-         directory=directory_path
-         )
+# save2txt(solution=simulation_result,
+#          filename='JUICE_cartesianstate_Q2.dat',
+#          directory=directory_path
+#          )
 
-save2txt(solution=dependent_variables,
-         filename='JUICE_KeplerElemets_Q2.dat',
-         directory=directory_path
-         )
+# save2txt(solution=dependent_variables,
+#          filename='JUICE_KeplerElemets_Q2.dat',
+#          directory=directory_path
+#          )
 
-###########################################################################
-# PLOT RESULTS ############################################################
-###########################################################################
+# ###########################################################################
+# # PLOT RESULTS ############################################################
+# ###########################################################################
 
-import matplotlib.ticker as mticker
+# import matplotlib.ticker as mticker
 
-# Extract time and Kepler elements from dependent variables
-kepler_elements = np.vstack(list(dependent_variables.values()))
-time = np.array(list(dependent_variables.keys()))
-time_days = [ t / constants.JULIAN_DAY - simulation_start_epoch / constants.JULIAN_DAY for t in time ]
+# # Extract time and Kepler elements from dependent variables
+# kepler_elements = np.vstack(list(dependent_variables.values()))
+# time = np.array(list(dependent_variables.keys()))
+# time_days = [ t / constants.JULIAN_DAY - simulation_start_epoch / constants.JULIAN_DAY for t in time ]
 
 ## ONly if you want to plot in Python
 

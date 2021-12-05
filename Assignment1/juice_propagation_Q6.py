@@ -137,11 +137,15 @@ acceleration_settings_on_Ganymede_perturbed = dict(
     Callisto =[propagation_setup.acceleration.point_mass_gravity()],
 ) 
 
+dependent_variables_to_save = [propagation_setup.dependent_variable.single_acceleration(
+                               propagation_setup.acceleration.point_mass_gravity_type,'JUICE','Ganymede')]
+
 # define two distinct acceleration settings
 # CASE 1 : Create global accelerations dictionary.
 acceleration_settings_unperturbed = {'JUICE': acceleration_settings_on_juice_unperturbed,'Ganymede':acceleration_settings_on_Ganymede_unperturbed}
 
 # CASE 2 : Create global accelerations dictionary.
+
 acceleration_settings_perturbed = {'JUICE': acceleration_settings_on_juice_perturbed,'Ganymede':acceleration_settings_on_Ganymede_perturbed}
 
 # Create two distinct acceleration models.
@@ -164,7 +168,7 @@ initial_state_juice = spice.get_body_cartesian_state_at_epoch(
     observer_body_name='Jupiter',
     reference_frame_name='ECLIPJ2000',
     aberration_corrections='NONE',
-    ephemeris_time= simulation_start_epoch )
+    ephemeris_time= simulation_start_epoch)
 
 initial_state_ganymede = spice.get_body_cartesian_state_at_epoch(
     target_body_name='Ganymede',
@@ -184,7 +188,8 @@ propagator_settings_unperturbed = propagation_setup.propagator.translational(
     acceleration_models_unperturbed,
     bodies_to_propagate,
     initial_state,
-    termination_settings
+    termination_settings,
+    output_variables = dependent_variables_to_save
 )
 
 #Case 2 : perturbed
@@ -220,22 +225,27 @@ dynamics_simulator_perturbed = numerical_simulation.SingleArcSimulator(
 simulation_result_unperturbed = dynamics_simulator_unperturbed.state_history
 simulation_result_perturbed = dynamics_simulator_perturbed.state_history
 
+dependent_variables = dynamics_simulator_unperturbed.dependent_variable_history 
 
-directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
+# directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_unperturbed,
-         filename='JUICE_cartesianstate_unperturbed_Q6.dat',
-         directory=directory_path
-         )
+# # w.r.t jupiter
+# save2txt(solution=simulation_result_unperturbed,
+#          filename='JUICE_cartesianstate_unperturbed_Q6.dat',
+#          directory=directory_path
+#          )
 
-# w.r.t jupiter
-save2txt(solution=simulation_result_perturbed,
-         filename='JUICE_cartesianstate_perturbed_Q6.dat',
-         directory=directory_path
-         )
+# # w.r.t jupiter
+# save2txt(solution=simulation_result_perturbed,
+#          filename='JUICE_cartesianstate_perturbed_Q6.dat',
+#          directory=directory_path
+#          )
 
-
+# # w.r.t jupiter
+# save2txt(solution=dependent_variables,
+#          filename='Acceleration_from_Ganymede_on_Juice_Q6.dat',
+#          directory=directory_path
+#          )
 
 
 

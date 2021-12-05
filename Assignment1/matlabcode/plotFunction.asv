@@ -100,10 +100,10 @@ end
 % section A
 
 CartesianCoordinatesQ2  = dlmread('OUTPUTFILES/JUICE_cartesianstate_Q2.dat');
-KeplerianStateQ2_full   = dlmread('OUTPUTFILES/JUICE_KeplerElemets_Q2.dat');
-KeplerianStateQ2        = KeplerianStateQ2_full(:,1:7);
+KeplerianStateQ2        = dlmread('OUTPUTFILES/JUICE_KeplerElemets_Q2.dat');
+KeplerianStateQ2        = KeplerianStateQ2(:,1:8);
 
-acceleration_q2         = KeplerianStateQ2_full(:,8:end); % m/s^2 acc norm
+acceleration_q2         = KeplerianStateQ2(:,0); % m/s^2 acc norm
 time_sec   =  KeplerianStateQ2(:,1)-KeplerianStateQ2(1,1);          %s
 time_days  = (KeplerianStateQ2(:,1)-KeplerianStateQ2(1,1))/60/60/24; %days
 kep_labels = {'\Delta a [m]','\Delta e','\Delta i [rad]','\Delta \omega [rad]','\Delta \Omega [rad]','\Delta \theta[rad]'};
@@ -485,13 +485,8 @@ legend()
 Juice_and_Ganymede_unperturbed_Jframe    = dlmread('OUTPUTFILES/JUICE_cartesianstate_unperturbed_Q6.dat');
 Juice_and_Ganymede_perturbed_Jframe      = dlmread('OUTPUTFILES/JUICE_cartesianstate_perturbed_Q6.dat');
 
-acceleration_q6     = dlmread('Acceleration_from_Ganymede_on_Juice_Q6.dat')
-fig_task6a_acc=figure('Name','Question 6a difference in acc','Position',[50,50,1000,400]);
+accelration_q6     = dlmread('Acceleration_from_Ganymede_on_Juice_Q6.dat')
 
-plot(time_days,sqrt(sum((acceleration_q6(:,2:end)-acceleration_q2).^2,2)),'linewidth',2,'DisplayName','unperturbed');
-
-xlabel('time (days)')
-ylabel('||(a_{Gs})_J - (a_{Gs})_G||')
 
 % [2:7] state of juice position and speed
 % [8:13] state of juice position and speed
@@ -624,7 +619,6 @@ if print_images
     exportgraphics(fig_task4b_com,fullfile(imagesFolder,'task4a_componenets.eps'))
     exportgraphics(fig_task5a_effciency,fullfile(imagesFolder,'task5a_j_vs_G_.eps'))
     exportgraphics(fig_task6a_effciency,fullfile(imagesFolder,'task6a_j_vs_G_.eps'))
-    exportgraphics(fig_task6a_acc,fullfile(imagesFolder,'task6a_acc.eps'))
     exportgraphics(fig_task7_mean_anomaly,fullfile(imagesFolder,'task7.eps'))
     exportgraphics(fig_task7_perturbed,fullfile(imagesFolder,'task7_kepler.eps'))
 end

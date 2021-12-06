@@ -223,9 +223,8 @@ dynamics_simulator_perturbed = numerical_simulation.SingleArcSimulator(
     bodies, integrator_settings, propagator_settings_perturbed )
 
 simulation_result_unperturbed = dynamics_simulator_unperturbed.state_history
-simulation_result_perturbed = dynamics_simulator_perturbed.state_history
-
-dependent_variables = dynamics_simulator_unperturbed.dependent_variable_history 
+simulation_result_perturbed   = dynamics_simulator_perturbed.state_history
+dependent_variables           = dynamics_simulator_unperturbed.dependent_variable_history 
 
 # directory_path = '/Users/gregorio/Desktop/DelftUni/NumericalAstro/assignments/assignment1/NumericalAstro_2021_Gregorio_Marchesini/Assignment1/OUTPUTFILES'
 

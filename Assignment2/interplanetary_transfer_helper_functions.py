@@ -22,12 +22,12 @@ from tudatpy.kernel.astro import two_body_dynamics
 from tudatpy.kernel.astro import element_conversion
 
 # Define departure/arrival epoch - in seconds since J2000
-departure_epoch = ...
-time_of_flight = ...
-arrival_epoch = departure_epoch + time_of_flight
-target_body = ...
+departure_epoch = 2706.437704 * constants.JULIAN_DAY
+time_of_flight  = 151.6330869 * constants.JULIAN_DAY
+arrival_epoch   = departure_epoch + time_of_flight
+target_body     = 'Venus'
 global_frame_orientation = 'ECLIPJ2000'
-fixed_step_size = 3600.0
+fixed_step_size          = 3600.0
 
 ################ HELPER FUNCTIONS: DO NOT MODIFY ########################################
 
@@ -101,7 +101,7 @@ def get_lambert_problem_result(
     a target body (at arrival epoch), with the states of Earth and the target body defined
     by ephemerides stored inside the SystemOfBodies object (bodies). Note that this solver
     assumes that the transfer departs/arrives to/from the center of mass of Earth and the target body
-
+    
     Parameters
     ----------
     bodies : Body objects defining the physical simulation environment
@@ -362,15 +362,34 @@ def get_unperturbed_propagator_settings(
     initial_state : Cartesian initial state of the vehicle in the simulation
 
     termination_time : Epoch since J2000 at which the propagation will be terminated
-
+    
 
     Return
     ------
     Propagation settings of the unperturbed trajectory.
     """
+    
+    body_to_propagate = ['Spacecraft']
+    central_body      = ['Sun']
+    
+    acceleration_settings_on_spacecraft = dict(
+    Sun=[propagation_setup.acceleration.point_mass_gravity()])
+    
+    # Create global accelerations dictionary.
+    acceleration_settings = {'Spacecraft': acceleration_settings_on_spacecraft}
+    
+    # Create acceleration models.
+    acceleration_models = propagation_setup.create_acceleration_models(
+        bodies, acceleration_settings, body_to_propagate , central_body )
 
-    # Create propagation settings.
-    propagator_settings = ...
+    termination_settings = propagation_setup.propagator.time_termination( termination_time )
+    
+    propagator_settings = propagation_setup.propagator.translational(
+    central_body,
+    acceleration_models ,
+    body_to_propagate,
+    initial_state,
+    termination_settings)
 
     return propagator_settings
 
@@ -402,10 +421,24 @@ def get_perturbed_propagator_settings(
     ------
     Propagation settings of the perturbed trajectory.
     """
-
-
-    # Define accelerations acting on vehicle.
-    acceleration_settings_on_spacecraft = ...
+    
+    body_to_propagate = ['Spacecraft']
+    central_body      = ['Sun']
+    
+    acceleration_settings_on_spacecraft = dict(
+    Sun=[propagation_setup.acceleration.point_mass_gravity(),
+         propagation_setup.acceleration.cannonball_radiation_pressure()],
+    Mars=[propagation_setup.acceleration.point_mass_gravity()],
+    Venus=[propagation_setup.acceleration.point_mass_gravity()],
+    Moon=[propagation_setup.acceleration.point_mass_gravity()],
+    Jupiter=[propagation_setup.acceleration.point_mass_gravity()],
+    Earth=[propagation_setup.acceleration.point_mass_gravity()]
+    )
+    
+    dependent_variables_to_save = [propagation_setup.dependent_variable.total_acceleration('Spacecraft'),
+                                   propagation_setup.dependent_variable.relative_distance('Spacecraft','Earth'),
+                                   propagation_setup.dependent_variable.relative_distance('Spacecraft','Venus'),
+                                   ]    
 
     # DO NOT MODIFY, and keep AFTER creation of acceleration_settings_on_spacecraft
     # (line is added for compatibility with question 4)
@@ -413,31 +446,102 @@ def get_perturbed_propagator_settings(
         acceleration_settings_on_spacecraft["Sun"].append(
             propagation_setup.acceleration.empirical(rsw_acceleration_magnitude))
 
+    # Create global accelerations dictionary.
+    acceleration_settings = {'Spacecraft': acceleration_settings_on_spacecraft}
+    
+    # Create acceleration models.
+    acceleration_models = propagation_setup.create_acceleration_models(
+        bodies, acceleration_settings, body_to_propagate , central_body )
+
+    termination_settings = propagation_setup.propagator.time_termination( termination_time )
+    
+    propagator_settings = propagation_setup.propagator.translational(
+    central_body,
+    acceleration_models ,
+    body_to_propagate,
+    initial_state,
+    termination_settings,
+    output_variables = dependent_variables_to_save
+    )
+
+    return propagator_settings
+    
+    
+    
+    
+    
+    
+    
     # Create propagation settings.
     propagator_settings = ...
 
     return propagator_settings
 
 # STUDENT CODE TASK REMOVE - full function (except signature and return)
-def create_simulation_bodies( ) -> environment.SystemOfBodies:
+def create_simulation_bodies( natural_bodies,
+                             glb_frame_origin = 'Sun',
+                             vehicle_spec = None
+                             ) -> environment.SystemOfBodies:
 
     """
     Creates the body objects required for the simulation, using the
     environment_setup.create_system_of_bodies for natural bodies,
     and manual definition for vehicles
 
-    Parameters
-    ----------
-    none
+    Parameters                                               DATA type
+    ----------                                               ---------
+    natural_bodies : list of natual bodies to create         list
+    
+    glb_fram       : frame of reference for all the          str
+                     simulations
+                     
+    vehicle_specs  : dictionary defining specific            dict
+                     parameters of the spacecraft
+                     examples :
+                     1) name : 'JUICE'
+                     2) mass :  200 kg
+                     3) drag coefficients = 0.3
+                     
 
     Return
     ------
     Body objects required for the simulation.
 
     """
+    
+    # Create settings for celestial bodies
+    global_frame_origin = glb_frame_origin       # this is the origin of the refernce system
+    global_frame_orientation = 'ECLIPJ2000'  # orinetation of the reference system
+    
+    body_settings = environment_setup.get_default_body_settings(
+        natural_bodies, global_frame_origin, global_frame_orientation) # body settings taken from SPICE.
 
-    bodies = ...
+    # Create environment
+    bodies = environment_setup.create_system_of_bodies(body_settings)
 
+    ###########################################################################
+    # CREATE VEHICLE ##########################################################
+    ###########################################################################
+    
+    if not vehicle_spec == None:
+        # Create vehicle object
+        bodies.create_empty_body(vehicle_spec["name"])
+        keys_vehicle = {key for key in vehicle_spec.keys()}
+        if 'mass' in keys_vehicle :
+            bodies.get_body(vehicle_spec["name"]).mass=vehicle_spec["mass"]
+        if 'radiation_coefficient' in keys_vehicle :
+            # Create aerodynamic coefficients interface (drag-only; zero side force and lift)
+            reference_area_radiation       = vehicle_spec['radiation_ref_A']  # m^2
+            radiation_pressure_coefficient = vehicle_spec['radiation_coefficient']     
+            radiation_pressure_settings = environment_setup.radiation_pressure.cannonball(
+                           "Sun", reference_area_radiation, radiation_pressure_coefficient
+            )
+
+            environment_setup.add_radiation_pressure_interface(
+                   bodies,vehicle_spec['name'], radiation_pressure_settings
+            )
+
+ 
     return bodies
 
 

@@ -173,18 +173,18 @@ for fig,case,title in zip(fig_list,cases,buffer_list) :
     fig.add_trace(go.Scatter(x=time_stumps[case], y=difference_numerical_analytical[case]['delta_pos'][:,0],
                     mode='lines+markers'),row=1, col=1)
     fig.update_yaxes(title_text=r'$\Delta r \quad m$',nticks=4,showexponent = 'all',
-        exponentformat = 'e',row=1, col=1)
+        exponentformat = 'e',type="log",row=1, col=1)
     
     fig.add_trace(go.Scatter(x=time_stumps[case], y=difference_numerical_analytical[case]['delta_vel'][:,0],
                     mode='lines+markers'),
                     row=2, col=1)
     fig.update_yaxes(title_text=r'$\Delta v \quad m/s$',nticks=4,showexponent = 'all',
-        exponentformat = 'e',row=2, col=1)
+        exponentformat = 'e',type="log",row=2, col=1)
     
     fig.add_trace(go.Scatter(x=time_stumps[case], y=difference_numerical_analytical[case]['delta_acc'][:,0],
                     mode='lines+markers'), row=3, col=1)
     fig.update_yaxes(title_text=r'$\Delta a \quad m/s^2$ ',nticks=4,showexponent = 'all',
-        exponentformat = 'e', row=3, col=1)
+        exponentformat = 'e',type="log", row=3, col=1)
     
     fig.update_xaxes(title='time [days]')
     fig.add_vrect(x0=time_stumps[case][0], x1=time_stumps[case][150], 
@@ -252,19 +252,19 @@ for jj,case in enumerate(middle_case):
     fig.add_trace(go.Scatter(x=library[case]['time'], y=difference_numerical_analytical[case]['delta_pos'][:,0],
     mode='lines+markers'),row=1, col=1)
     fig.update_yaxes(title_text=r'$\Delta r \quad m$',nticks=4,showexponent = 'all',
-    exponentformat = 'e',row=1, col=1)
+    exponentformat = 'e',type="log",row=1, col=1)
     
     
     fig.add_trace(go.Scatter(x=library[case]['time'], y=difference_numerical_analytical[case]['delta_vel'][:,0],
     mode='lines+markers'),
     row=2, col=1)
     fig.update_yaxes(title_text=r'$\Delta v \quad m/s$',nticks=4,showexponent = 'all',
-    exponentformat = 'e',row=2, col=1)
+    exponentformat = 'e',type="log",row=2, col=1)
 
     fig.add_trace(go.Scatter(x=library[case]['time'], y=difference_numerical_analytical[case]['delta_acc'][:,0],
     mode='lines+markers'), row=3, col=1)
     fig.update_yaxes(title_text=r'$\Delta a \quad m/s^2$ ',nticks=4,showexponent = 'all',
-    exponentformat = 'e', row=3, col=1)
+    exponentformat = 'e',type="log", row=3, col=1)
 
     fig.update_xaxes(title='time [days]')
     
@@ -296,7 +296,7 @@ for jj,case in enumerate(middle_case):
     mode='lines+markers'))
     fig2.update_yaxes(title_text=r'$||r|| \quad [m]$',nticks=4,showexponent = 'all',
     exponentformat = 'e')
-    fig2.update_yaxes(title_text='time [days]')
+    fig2.update_xaxes(title_text='time [days]')
     
     fig2.update_layout(
     font=dict(

@@ -14,6 +14,7 @@ import pandas as pd
 import plotly.graph_objs as go
 import plotly.express as px
 from   plotly.subplots import make_subplots
+from tudatpy.kernel.astro import frame_conversion
 
 # Load spice kernels.
 spice_interface.load_standard_kernels( )
@@ -116,7 +117,9 @@ with open(file, 'w') as filetowrite:
         # DCM matrix
         
         DCM_inertial2RSW =  np.array([radial,along_track,cross_track])
+        DCM_tudat        =  frame_conversion.inertial_to_rsw_rotation_matrix(original_initial_state)
         print(DCM_inertial2RSW)
+        print(DCM_tudat)
                 
         lambert_history                  = get_lambert_arc_history(lambert_arc_ephemeris, nominal_integration_result)
         nominal_integration_state        = history2array(nominal_integration_result)
@@ -313,8 +316,30 @@ with open(file, 'w') as filetowrite:
     
     # convert frame of reference
         permitted_rsw_frame [arc_index,:3] = DCM_inertial2RSW @ permitted_perturbations[arc_index,:3][:np.newaxis]
+
+## save permitted perturbations
+filename = 'Question5_Results_AE4868_2021_2_5622824.dat'
+file=open(filename,'w')
+for row in permitted_perturbations :
+    row=[str(num) for num in row ]
+    row = ' '.join(row)
+    file.write(row + '\n')
+
+file.close()
+
+filename = 'Question5_RSW_perturbation.dat'
+file=open(filename,'w')
+for row in permitted_rsw_frame :
+    row=[str(num) for num in row ]
+    row = '&'.join(row)
+    file.write(row + '\n')
+
+file.close()
     
-          
+
+
+
+         
 table = open('summary_table.txt','w')
 col = ['Index','$\Delta x_0 [m]$','$\Delta y_0 [m]$','$\Delta z_0 [m]$','$||\Delta r||_2$']
 table.write('&'.join(col)+'\\\\' + '\n')
@@ -339,9 +364,19 @@ fig5a.add_trace(go.Scatter(x=ii,
                                 mode='lines+markers',
                                 )) 
 fig5a.update_yaxes(title_text=r'$||\Delta r_0||_2 \quad [m]$',showexponent = 'all',
-            exponentformat = 'e')
-fig5a.update_xaxes(title_text='arc index',showexponent = 'all',exponentformat = 'e',tickvals=range(9))
+            exponentformat = 'e',type='log',range=[6,9])
+fig5a.update_xaxes(title_text='arc index',showexponent = 'all',exponentformat = 'e',tickvals=[0,1,2,3,4,5,6,7,8,9])
 figName = output_images_directory +'exercise5_a.eps'
+
+
+fig5a.update_layout(
+        font=dict(
+        family="Courier New, monospace",
+        size=14,
+        color="RebeccaPurple"),
+        width = 1000,
+        height=800,
+        showlegend= False)
 
 fig5a.write_image(figName)
 fig5a.show()
@@ -355,7 +390,7 @@ fig5a.show()
 
 
 
-comp = [r'$r_R$ [m]',r'$r_S$ [m]',r'$r_W$ [m]']
+comp = [r'$r_R [m]$',r'$r_S [m]$',r'$r_W [m]$']
 fig5d=make_subplots(rows=3,cols=1)
 for N in range(3) :
     
@@ -367,4 +402,16 @@ for N in range(3) :
             exponentformat = 'e',row=N+1,col=1)
     fig5d.update_xaxes(title_text='arc index',showexponent = 'all',exponentformat = 'e',row=N+1,col=1)
 
+ fig5d.update_layout(
+        font=dict(
+        family="Courier New, monospace",
+        size=14,
+        color="RebeccaPurple"),
+        width = 1000,
+        height=800,
+        showlegend= False)
+
+figName = output_images_directory +'exercise5_d.eps'
+
+fig5d.write_image(figName)
 fig5d.show()

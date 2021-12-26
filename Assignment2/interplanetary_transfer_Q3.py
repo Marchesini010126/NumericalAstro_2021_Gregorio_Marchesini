@@ -29,7 +29,7 @@ images_dir       =  "./output_images"
 
 # DECISON TO TAKE :
 
-activate_recursive_correction  = 1# 0/1  not_active/active
+activate_recursive_correction  = 0# 0/1  not_active/active
 
 
 
@@ -90,7 +90,8 @@ for arc_index in range(number_of_arcs):
     # Propagate dynamics on current arc (use propagate_trajecory function)
     dynamics_simulator = propagate_trajectory( current_arc_initial_time, current_arc_final_time, bodies, lambert_arc_ephemeris,
                      use_perturbations = True)
-    
+    write_propagation_results_to_file(
+           dynamics_simulator, lambert_arc_ephemeris, 'Q3a_arc_'+ str(arc_index),output_directory)
     ###########################################################################
     # RUN CODE FOR QUESTION 3c/d/e ############################################
     ###########################################################################
@@ -161,16 +162,16 @@ for arc_index in range(number_of_arcs):
             save_corrected_hopping_error[arc_index]   = {'state' :history2array(dynamics_simulator_corrected.state_history)[:,1:] - history2array(lambert_history)[:,1:],
                                                          'time'  : history2array(dynamics_simulator_corrected.state_history)[:,0]}
             
-            final_position      =  save_corrected_hopping_error[arc_index]['state'][-1,:3]
-            position_error_norm =  np.sqrt(np.sum(final_position**2))
-            counter             = counter +1
+            final_position_error  =  save_corrected_hopping_error[arc_index]['state'][-1,:3]
+            final_speed_error     =  save_corrected_hopping_error[arc_index]['state'][-1,3:]
+            position_error_norm   =  np.sqrt(np.sum(final_position_error**2))
+            counter               =  counter +1
             
-            print('##########################################')
-            print('##########################################')
-            print('iteration')
-            print(counter)
-            print('error norm')
-            print(position_error_norm) 
+        total_dv_required += (initial_speed_correction - final_speed_error)
+        print('the total DV correction is equal to :')
+        print(total_dv_required)
+            
+             
         
         line_table = [arc_index,counter,position_error_norm]
         line_table = [str(entry) for entry in line_table]
@@ -228,8 +229,12 @@ for arc_index in range(number_of_arcs):
             
             #initial and final dv correction in order to remain into the 
             # lambert arc linearization
+            
+            
+                                 # initial speed correction   # final speed correction burn
             total_dv_required += initial_speed_correction - save_corrected_hopping_error[arc_index]['state'][-1,3:]
-
+            print('the total DV correction is equal to :')
+            print(total_dv_required)
 
 
 # plot 3a part
@@ -245,9 +250,9 @@ if not activate_recursive_correction :
                                 name="arc_number : {}".format(jj))) 
 
     fig3a.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e',type="log", range=[-1,9])
     fig3a.update_xaxes(title_text='time [days]',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e')
 
     fig3a.update_layout(
             font=dict(
@@ -275,9 +280,9 @@ if not activate_recursive_correction :
                                 name="arc_number : {}".format(jj))) 
 
     fig3c.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e',type="log", range=[-1,9])
     fig3c.update_xaxes(title_text='time [days]',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e')
 
     fig3c.update_layout(
             font=dict(
@@ -354,9 +359,9 @@ else :
                                 name="arc_number : {}".format(jj))) 
 
     fig3e.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e',type="log", range=[-1,9])
     fig3e.update_xaxes(title_text='time [days]',showexponent = 'all',
-            exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+            exponentformat = 'e')
 
     fig3e.update_layout(
             font=dict(

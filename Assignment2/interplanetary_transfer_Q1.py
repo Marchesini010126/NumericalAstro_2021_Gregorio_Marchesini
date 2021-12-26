@@ -26,6 +26,7 @@ spice_interface.load_standard_kernels( )
 
 # Define directory where simulation output will be written
 output_directory = "./SimulationOutput/"
+TXTfile_to_save = 'CartesianResults_AE4868_2021_2_5622824.dat'
 ###########################################################################
 # RUN CODE FOR QUESTION 1 #################################################
 ###########################################################################
@@ -159,3 +160,4 @@ fig.show()
 
 fig.write_image("output_images/exercise1_single_component_error.eps")
 
+for 

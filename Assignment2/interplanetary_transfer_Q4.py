@@ -114,6 +114,13 @@ save_error_over_time_corrected= {'state' : history2array(dynamics_simulator_corr
 initial_time  = save_error_over_time_corrected['time'][0] #days
 
 
+save_error_over_time_corrected['time']
+save_error_over_time_corrected['state']
+
+print(arrival_epoch_with_buffer)
+for ii in range(len(history2array(dynamics_simulator_corrected.state_history)[-1,1:])):
+  print('{:,.15f}'.format(history2array(dynamics_simulator_corrected.state_history)[-1,1+ii]))
+
 fig4a = go.Figure()
 fig4a.add_trace(go.Scatter(x=save_error_over_time_corrected['time'],
                     y=np.sqrt(np.sum(save_error_over_time_corrected['state'][:,:3]**2,axis=1)),
@@ -123,10 +130,10 @@ fig4a.add_trace(go.Scatter(x=save_error_over_time['time'],
                     mode='lines+markers',name='no Low-Thrust correction') )
 
 fig4a.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e',type="log", range=[-1,11])
 
 fig4a.update_xaxes(title_text='time [days]',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e')
 
 fig4a.update_layout(
 font=dict(
@@ -140,10 +147,6 @@ showlegend= True)
 figName = output_images_directory +'exercise4_single_arc.eps'
 fig4a.write_image(figName)
 
-
-###########################################################################
-# RUN CODE FOR QUESTION 4e ################################################
-###########################################################################
 
 # divide the trajectory into 2 separate arcs of time 
 # compute optimal p2
@@ -208,8 +211,6 @@ p2      = np.linalg.inv(S2_rp)@(-final_state_position_error[:,np.newaxis] - phi2
 
 # propagate with new settings 
 thrust     = [p1,p2]
-print(thrust[0])
-print(thrust[1])
 correction = np.zeros((6,))
 save_error = []
 
@@ -250,13 +251,13 @@ fig4c.add_trace(go.Scatter(x=np.asarray(save_error[0]['time'],np.float64)/consta
                     mode='lines+markers',name='Arc1'))
 fig4c.add_trace(go.Scatter(x=np.asarray(save_error[1]['time'],np.float64)/constants.JULIAN_DAY-initial_time,
                     y=save_error[1]['error'],
-                    mode='lines+markers',name='Arc1'))
+                    mode='lines+markers',name='Arc2'))
 
 fig4c.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e',type='log')
 
 fig4c.update_xaxes(title_text='time [days]',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e')
 
 fig4c.update_layout(
 font=dict(
@@ -271,63 +272,139 @@ showlegend= True)
 figName = output_images_directory +'exercise4_two_arcs_1.eps'
 fig4c.write_image(figName)
 
-# final correction
-# god make it work please
+###########################################################################
+# RUN CODE FOR QUESTION 4e ################################################
+###########################################################################
 
-# the idea : the mid position error is so high that the 
-#            the linearisation assumption maybe not valid 
-#            anymore. Solev by back correcting from the final given position
-#            of the lambert arc
+# step by step solution
+# (some passages are identical to previous passages, but I 
+#  repeat them for clarity)
 
-mid_point_position_error   =  save_error[0]['state_error'][-1,1:4] # state error
-mid_point_state_error      =  save_error[0]['state_error'][-1,1:]
-final_state_position_error =  save_error[1]['state_error'][-1,1:4]
+# step 1 : propagate perturbed orbit with p1 thrust until mid point
+# step 2 : stop at mid point and recompute the state error propagatetd vs Lambert
+# step 3 : propagate perturbed from the new mid point position and propagate
+#          variational equations 
+# step 4 : apply a new thrust correction that will correct the final error 
+#          computed between the solution at step 3  and Lambert solution
+# step 5 : if some error is still present it is possible to 
+#          compensate for it by iterative process on p2
 
-# so now back correct
-#p2 = np.linalg.inv(S2_rp)@(-final_state_position_error+mid_point_position_error)[:,np.newaxis]
 
-p2      = p2 + np.linalg.inv(S2_rp)@(-final_state_position_error[:,np.newaxis] - phi2_r_only @ S1 @ p1)
-correction = mid_point_state_error
-#correction = np.zeros((6,))
-thrust = p2
-arc_initial_time = departure_epoch_with_buffer + 1*arc_lenght
-arc_final_time   = departure_epoch_with_buffer + (2)*arc_lenght
 
-# new arc two propagation
+# step 1 : propagate perturbed orbit with p1 thrust 
 
-dynamics_simulator_corrected = propagate_trajectory(
-            arc_initial_time,
-            arc_final_time,
+# from start to midpoint
+arc1_initial_time = departure_epoch_with_buffer 
+arc1_final_time   = departure_epoch_with_buffer + arc_lenght
+
+# uncorrected perturbe orbit
+dynamics_simulator = propagate_trajectory(
+            arc1_initial_time,
+            arc1_final_time,
             bodies,
             lambert_arc_ephemeris,
             use_perturbations= True,
-            initial_state_correction=correction,
             use_rsw_acceleration = True,
-            rsw_acceleration_magnitude = thrust)
+            rsw_acceleration_magnitude = p1)
+
+# step 2 : stop at mid point and recompute the state error propagatetd vs Lambert
+
+arc1_state_history     = dynamics_simulator.state_history
+time_arc1              = list(arc1_state_history.keys())
+lambert_arc1_history   = get_lambert_arc_history(lambert_arc_ephemeris,arc1_state_history)
+midpoint_correction    = arc1_state_history[time_arc1[-1]]-lambert_arc1_history[time_arc1[-1]]
+
+#step 3 : propagate perturbed from the new mid point position and propagate
+#          variational equations 
+
+arc2_initial_time = departure_epoch_with_buffer + arc_lenght
+arc2_final_time   = departure_epoch_with_buffer + 2*arc_lenght
+
+# solves both the perturbed state and the variational equations
+variational_equations_solver = propagate_variational_equations(
+        arc2_initial_time,
+        arc2_final_time,
+        bodies,
+        lambert_arc_ephemeris,
+        initial_state_correction = midpoint_correction,
+        use_rsw_acceleration = True) 
+
+arc2_state_history     = variational_equations_solver.state_history
+time_arc2              = list(arc2_state_history.keys())
+print('{:,.15f}'.format(time_arc2[-1]))
+lambert_arc2_history   = get_lambert_arc_history(lambert_arc_ephemeris,arc2_state_history)
+
+final_error             = arc2_state_history[time_arc2[-1]]-lambert_arc2_history[time_arc2[-1]]
+final_position_error    = final_error[:3]
+St1t2                   = variational_equations_solver.sensitivity_matrix_history[time_arc2[-1]]
 
 
-state_history       = dynamics_simulator_corrected.state_history
-lambert_arc_history = get_lambert_arc_history(lambert_arc_ephemeris,state_history)
-state_error_array   = history2array(state_history)-history2array(lambert_arc_history)
-position_error      = np.sqrt(np.sum(state_error_array[:,1:4]**2,axis=1))
-book                = {'time':time,'error':position_error,'state_error':state_error_array}
-save_error[1]['error']       = position_error
-save_error[1]['state_error'] = state_error_array
+# step 4/5 : apply a new thrust correction that will correct the final error 
+#            computed between the solution at step 3 and Lambert solution. Also implement 
+#            this passage iteratively so that the final solution will converge
+
+# compute the new thrust
+St1t2_rp   = St1t2[:3,:]
+p2         = -np.linalg.inv(St1t2_rp)@final_error[:3][:,np.newaxis]
+
+counter  = 0
+max_iter = 30
+tol      = 10 #m
+
+while np.linalg.norm(final_position_error) > tol and counter <max_iter :
+
+    dynamics_simulator = propagate_trajectory(
+                arc2_initial_time,
+                arc2_final_time,
+                bodies,
+                lambert_arc_ephemeris,
+                initial_state_correction = midpoint_correction,
+                use_perturbations= True,
+                use_rsw_acceleration = True,
+                rsw_acceleration_magnitude = p2)
+
+    arc2_corrected_state_history     = dynamics_simulator.state_history
+    time_arc2                        = list(arc2_state_history.keys())
+    lambert_arc2_history             = get_lambert_arc_history(lambert_arc_ephemeris,arc2_corrected_state_history)
+
+    final_error             = arc2_corrected_state_history[time_arc2[-1]]-lambert_arc2_history[time_arc2[-1]]
+    final_position_error    = final_error[:3]
+    
+    p2         = p2 + -np.linalg.inv(St1t2_rp)@final_error[:3][:,np.newaxis]
+    
+    counter = counter + 1
+
+
+# Conversion to array for semplification
+
+position_difference_arc1 = history2array(arc1_state_history)[:,:3] - history2array(lambert_arc1_history)[:,:3]
+position_difference_arc2 = history2array(arc2_corrected_state_history)[:,:3] - history2array(lambert_arc2_history)[:,:3]
+
+position_difference_norm_arc1= np.sqrt(np.sum(position_difference_arc1**2,axis=1))
+position_difference_norm_arc2= np.sqrt(np.sum(position_difference_arc2**2,axis=1))
+
+time_arc1 = np.array(time_arc1)/constants.JULIAN_DAY
+intial_time = time_arc1[-1]
+  
+time_arc1 = time_arc1 - initial_time
+time_arc2 = np.array(time_arc2)/constants.JULIAN_DAY - initial_time
+
 
 
 fig4e = go.Figure()
-fig4e.add_trace(go.Scatter(x=np.asarray(save_error[0]['time'],np.float64)/constants.JULIAN_DAY-initial_time,
-                    y=save_error[0]['error'],
+fig4e.add_trace(go.Scatter(x=time_arc1,
+                           y=position_difference_norm_arc1,
                     mode='lines+markers',name='Arc1'))
-fig4e.add_trace(go.Scatter(x=np.asarray(save_error[1]['time'],np.float64)/constants.JULIAN_DAY-initial_time,
-                    y=save_error[1]['error'],
-                    mode='lines+markers',name='Arc1'))
+
+fig4e.add_trace(go.Scatter(x=time_arc2,
+                    y=position_difference_norm_arc2,
+                    mode='lines+markers',name='Arc2'))
 
 fig4e.update_yaxes(title_text=r'$||\Delta r||_2 \quad [m]$',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e',type='log')
 
 fig4e.update_xaxes(title_text='time [days]',showexponent = 'all',
-exponentformat = 'e',showline=True, linewidth=2, linecolor='black')
+exponentformat = 'e')
 
 fig4e.update_layout(
 font=dict(
@@ -338,5 +415,6 @@ width = 1000,
 height=800,
 showlegend= True)
 
-
+figName = output_images_directory +'exercise4e.eps'
+fig4e.write_image(figName)
 fig4e.show()

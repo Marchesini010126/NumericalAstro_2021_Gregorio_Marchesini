@@ -34,7 +34,7 @@ else:
     number_of_iterations = 1
 
 # Define list of integrator tolerances
-integration_tolerances = [1.0E-12, 1.0E-10, 1.0E-8, 1.0E-6]
+integration_tolerances = [1.0E-12, 1.0E-10, 1.0E-8,1.0E-6]
 
 # Run code for Q2 and Q3 (run_flyby_from_closest_approach=0) and optionally for Q4 (run_flyby_from_closest_approach=1)
 for run_flyby_from_closest_approach in range(number_of_iterations):
@@ -49,16 +49,17 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
     for current_phase in range( number_of_phases ):
 
         # Create initial state and time
-        current_phase_start_time = ...
-        current_phase_end_time = ...
+        current_phase_start_time = initial_times_per_phase[ current_phase ]
+        current_phase_end_time   = current_phase_start_time + propagation_times_per_phase[ current_phase ]
 
         # If running Q4, modify initial/final times
         if run_flyby_from_closest_approach == 1:
-            ...
+            pass
 
         # Define central body of propagation 
         current_central_body = central_bodies_per_phase[ current_phase ]
-
+        print('planet : {}'.format(current_central_body))
+        print('Phase  : {}'.format(phase_names[current_phase]))
         # Define termination conditions (enforce exact termination time)
         termination_condition = propagation_setup.propagator.time_termination(
             current_phase_end_time,
@@ -69,33 +70,74 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
         unperturbed_acceleration_models = get_unperturbed_accelerations( current_central_body, bodies)
 
         # Create propagator settings for perturbed and unperturbed case
-        perturbed_propagator_settings = ...
-        unperturbed_propagator_settings = ...
+       
+        body2propagate= "JUICE"
+        # Retrieve JUICE initial state
+        
+        print('Loading  initial conditions....')
+        
+        initial_state = spice_interface.get_body_cartesian_state_at_epoch(
+            target_body_name= "JUICE",
+            observer_body_name=current_central_body,
+            reference_frame_name=global_frame_orientation,
+            aberration_corrections="NONE",
+            ephemeris_time= current_phase_start_time
+        )
+        
+        
+        
+        
+        print('Loading  propagatin settings....')
+        
+        perturbed_propagator_settings = propagation_setup.propagator.translational(
+                                        [current_central_body],
+                                        perturbed_acceleration_models,
+                                        [body2propagate] ,
+                                        initial_state,
+                                        termination_condition
+                                        )
 
+        unperturbed_propagator_settings = propagation_setup.propagator.translational(
+                                            [current_central_body],
+                                            unperturbed_acceleration_models,
+                                            [body2propagate] ,
+                                            initial_state,
+                                            termination_condition
+                                            )
+
+        print('Propagating banckmark ....')
         # Define integrator settings for benchmark
-        benchmark_integrator_settings = ...
+        benchmark_integrator_settings = get_fixed_step_size_integrator_settings(current_phase_start_time,time_steps_Q2[current_phase])
 
-        # Propagate benchmark dynamics
-        benchmark_dynamics_simulator = ...
-
+        # Propagate benchmark dynamics for perturbed state
+        benchmark_dynamics_simulator = dynamics_simulator = numerical_simulation.SingleArcSimulator(bodies,
+                                                                        benchmark_integrator_settings,
+                                                                        perturbed_propagator_settings,
+                                                                        print_dependent_variable_data=False)
+        
+        
         # Create interpolator for benchmark results
-        interpolator_settings = interpolators.lagrange_interpolation( 8 )
+        interpolator_settings  = interpolators.lagrange_interpolation( 8 )
         benchmark_interpolator = interpolators.create_one_dimensional_interpolator(
             benchmark_dynamics_simulator.state_history, interpolator_settings )
         
         # Perform integration of dynamics with different tolerances
         for current_tolerance in integration_tolerances:
             
+            print('Solving solution for toleranace --- > {}'.format(current_tolerance))
             # Define integrator step settings
             initial_time_step = 10.0
-            minimum_step_size = 1.0E-16
-            maximum_step_size = np.inf
-            
-            # Retrieve coefficient set
-            coefficient_set = ...
+            minimum_step_size = 1.0E-12
+            maximum_step_size = np.infty
+            print('Initial propagation time : {}'.format(current_phase_start_time))
             
             # Create variable step-size integrator settings
-            integrator_settings = ...
+            # Create propagator settings for perturbed and unperturbed case
+            coefficient_set     = propagation_setup.integrator.rkf_78
+            integrator_settings = propagation_setup.integrator.runge_kutta_variable_step_size(
+                                  10, time_steps_Q2[current_phase] , coefficient_set,
+                                  minimum_step_size, maximum_step_size,
+                                  current_tolerance, current_tolerance)
             
             # Define output file name
             file_output_identifier = "Iteration_" + str(run_flyby_from_closest_approach) + "tolerance-index" +\
@@ -103,16 +145,24 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
                                      "_phase-index" + str(current_phase)
             
             # Propagate dynamics for perturbed and unperturbed case
-            perturbed_dynamics_simulator = ...
-            unperturbed_dynamics_simulator = ...
+            print('Perturbed dynamics solution')
+            perturbed_dynamics_simulator = dynamics_simulator = numerical_simulation.SingleArcSimulator(bodies,
+                                                                        integrator_settings,
+                                                                        perturbed_propagator_settings,
+                                                                        print_dependent_variable_data=False)
+            print('Unperturbed dynamics solution')
+            unperturbed_dynamics_simulator = dynamics_simulator = numerical_simulation.SingleArcSimulator(bodies,
+                                                                        integrator_settings,
+                                                                        unperturbed_propagator_settings,
+                                                                        print_dependent_variable_data=False)
 
-            write_propagation_results_and_benchmark_difference_to_file(
-                    perturbed_dynamics_simulator,
-                    file_output_identifier,
-                    benchmark_interpolator)
+            #write_propagation_results_and_benchmark_difference_to_file(
+                    # perturbed_dynamics_simulator,
+                    # file_output_identifier,
+                    # benchmark_interpolator)
 
-            write_propagation_results_and_analytical_difference_to_file(
-                    unperturbed_dynamics_simulator,
-                    file_output_identifier + "_unperturbed",
-                    bodies.get_body(current_central_body).gravitational_parameter)
+            #write_propagation_results_and_analytical_difference_to_file(
+                    # unperturbed_dynamics_simulator,
+                    # file_output_identifier + "_unperturbed",
+                    # bodies.get_body(current_central_body).gravitational_parameter)
     

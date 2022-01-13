@@ -470,13 +470,13 @@ def multiplot(folderpath : str ,
     Parameters 
     ----------
     folderpath(str)       : path of the folder where the files to be ploted are 
-    file_identifier(str)  : simple list containing some file identifiers _indexFLYBY_
+    file_identifier(list) : simple list containing some file identifiers alike "_indexFLYBY_"
     ylabel(str)           : common label for all the files
     outputimage_name(str) : output image file name (with path   ./something/cool.eps)
     
     Retrun
     ------
-    None : only prints the image and a latex table
+    ax(AxisObject) : Matplotlib axis object 
     
     """
     matplotlib.rcParams.update({'font.size': 10})
@@ -513,7 +513,7 @@ def multiplot(folderpath : str ,
     
     table_file = open(table_name,'w')
     table_file.write('&'.join(['time step','time of max error [s]','mam $\epsilon$'])+'\\\\\n')
-    fig, ax = plt.subplots(1,len(sol_book))
+    fig, ax = plt.subplots(1,len(sol_book),figsize=(12,4))
     
     for jj in range(len(sol_book)):
         
@@ -538,12 +538,14 @@ def multiplot(folderpath : str ,
         ax[jj].set_xlabel('time [hours]')
         ax[jj].set_ylabel(ylabel)
         ax[jj].set_yscale('log')
-        
     
     
     fig.tight_layout()
     fig.savefig(outputimage_name)
     table_file.close()
+    
+    return ax
+
 
 def history2array(state_history):
     state = np.array(list(state_history.values()))

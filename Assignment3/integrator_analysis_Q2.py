@@ -35,7 +35,7 @@ else:
 
 # Define list of integrator tolerances
 integration_tolerances = [1.0E-12, 1.0E-10, 1.0E-8,1.0E-6]
-
+integration_tolerances_names =['10n12','10n10','10n8','10n6']
 # Run code for Q2 and Q3 (run_flyby_from_closest_approach=0) and optionally for Q4 (run_flyby_from_closest_approach=1)
 for run_flyby_from_closest_approach in range(number_of_iterations):
 
@@ -60,6 +60,7 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
         current_central_body = central_bodies_per_phase[ current_phase ]
         print('planet : {}'.format(current_central_body))
         print('Phase  : {}'.format(phase_names[current_phase]))
+        
         # Define termination conditions (enforce exact termination time)
         termination_condition = propagation_setup.propagator.time_termination(
             current_phase_end_time,
@@ -84,10 +85,10 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
             ephemeris_time= current_phase_start_time
         )
         
+        print('Done')
         
         
-        
-        print('Loading  propagatin settings....')
+        print('Loading  propagation settings....')
         
         perturbed_propagator_settings = propagation_setup.propagator.translational(
                                         [current_central_body],
@@ -104,7 +105,7 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
                                             initial_state,
                                             termination_condition
                                             )
-
+        print('Done')
         print('Propagating banckmark ....')
         # Define integrator settings for benchmark
         benchmark_integrator_settings = get_fixed_step_size_integrator_settings(current_phase_start_time,time_steps_Q2[current_phase])
@@ -120,29 +121,29 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
         interpolator_settings  = interpolators.lagrange_interpolation( 8 )
         benchmark_interpolator = interpolators.create_one_dimensional_interpolator(
             benchmark_dynamics_simulator.state_history, interpolator_settings )
-        
+        print('Done')
         # Perform integration of dynamics with different tolerances
-        for current_tolerance in integration_tolerances:
+        for kk,current_tolerance in enumerate(integration_tolerances):
             
             print('Solving solution for toleranace --- > {}'.format(current_tolerance))
             # Define integrator step settings
             initial_time_step = 10.0
             minimum_step_size = 1.0E-12
-            maximum_step_size = np.infty
-            print('Initial propagation time : {}'.format(current_phase_start_time))
+            maximum_step_size = 86400.0
             
             # Create variable step-size integrator settings
             # Create propagator settings for perturbed and unperturbed case
             coefficient_set     = propagation_setup.integrator.rkf_78
+            
             integrator_settings = propagation_setup.integrator.runge_kutta_variable_step_size(
-                                  10, time_steps_Q2[current_phase] , coefficient_set,
+                                  current_phase_start_time, initial_time_step, coefficient_set,
                                   minimum_step_size, maximum_step_size,
                                   current_tolerance, current_tolerance)
             
             # Define output file name
-            file_output_identifier = "Iteration_" + str(run_flyby_from_closest_approach) + "tolerance-index" +\
-                                     str(integration_tolerances.index(current_tolerance)) + \
-                                     "_phase-index" + str(current_phase)
+            file_output_identifier = "./exercise2/Iteration_" + str(run_flyby_from_closest_approach) + "tolerance_" +\
+                                     integration_tolerances_names[kk] + \
+                                     "_phase_" + str(phase_names[current_phase])
             
             # Propagate dynamics for perturbed and unperturbed case
             print('Perturbed dynamics solution')
@@ -155,14 +156,14 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
                                                                         integrator_settings,
                                                                         unperturbed_propagator_settings,
                                                                         print_dependent_variable_data=False)
+            print('Done')
+            write_propagation_results_and_benchmark_difference_to_file(
+                     perturbed_dynamics_simulator,
+                     file_output_identifier,
+                     benchmark_interpolator)
 
-            #write_propagation_results_and_benchmark_difference_to_file(
-                    # perturbed_dynamics_simulator,
-                    # file_output_identifier,
-                    # benchmark_interpolator)
-
-            #write_propagation_results_and_analytical_difference_to_file(
-                    # unperturbed_dynamics_simulator,
-                    # file_output_identifier + "_unperturbed",
-                    # bodies.get_body(current_central_body).gravitational_parameter)
+            write_propagation_results_and_analytical_difference_to_file(
+                     unperturbed_dynamics_simulator,
+                     file_output_identifier + "_unperturbed",
+                     bodies.get_body(current_central_body).gravitational_parameter)
     

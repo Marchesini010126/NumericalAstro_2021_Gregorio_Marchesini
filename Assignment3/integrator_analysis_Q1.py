@@ -34,6 +34,8 @@ def step_size_plotter(step_sizes:list,
     
     
     final_max_error_figure = dict()
+    central_accelerations  = dict()
+        
     
     # Iterate over phases
     for current_phase in range( len(central_bodies_per_phase )):
@@ -60,6 +62,8 @@ def step_size_plotter(step_sizes:list,
         acceleration_models = get_unperturbed_accelerations(current_central_body, bodies)
         
         termination_settings = propagation_setup.propagator.time_termination(current_phase_end_time)
+        dependent_variables_to_save = [propagation_setup.dependent_variable.single_acceleration_norm(
+                                           propagation_setup.acceleration.point_mass_gravity_type,'JUICE',current_central_body)]
         
         # Define propagator settings
         propagator_settings = propagation_setup.propagator.translational(
@@ -67,22 +71,25 @@ def step_size_plotter(step_sizes:list,
         acceleration_models,
         [body_to_propagate] ,
         initial_state,
-        termination_settings
-        )
+        termination_settings,
+        output_variables = dependent_variables_to_save)
 
         
         # Iterate over step size
         for jj,step_size in enumerate(step_sizes):
-            #step_size = int(step_size)
+            step_size = int(step_size)
             print('Working on step size : {}s'.format(step_size))
             # Define integrator settings
             integrator_settings = get_fixed_step_size_integrator_settings(current_phase_start_time, step_size)
             # Propagate dynamics
             
+            
+            
             dynamics_simulator = numerical_simulation.SingleArcSimulator(bodies,
                                                                         integrator_settings,
                                                                         propagator_settings,
-                                                                        print_dependent_variable_data=False)
+                                                                        print_dependent_variable_data=False,
+                                                                        )
             state_history = dynamics_simulator.state_history
             
             # Compute difference w.r.t. analytical solution to file
@@ -93,18 +100,12 @@ def step_size_plotter(step_sizes:list,
             keplerian_solution_difference_array = history2array(keplerian_solution_difference)
            
             position_error        = np.sqrt(np.sum(keplerian_solution_difference_array[:,1:4]**2,axis=1))
-            
-            
             max_error = np.max(position_error)
             index_max =np.argmax(position_error)
             time_max              = keplerian_solution_difference_array[index_max,0]
             
-            
-            
-            
-            
-            
-            save_max_error[jj,1]    = position_error[-1]
+           
+            save_max_error[jj,1]    = max_error
             save_max_error[jj,0]    = step_size
             
             if save_results :
@@ -115,8 +116,8 @@ def step_size_plotter(step_sizes:list,
                     dynamics_simulator, file_output_identifier, bodies.get_body( current_central_body ).gravitational_parameter)
         
         final_max_error_figure[phase_names[current_phase]] = save_max_error
-            
-            
+        dependent_variables_array = history2array(dynamics_simulator.dependent_variable_history)   
+        central_accelerations[phase_names[current_phase]] = dependent_variables_array  
         if save_results :  
             search_dir   = "./SimulationOutput/exercise1"
             output_image = './SimulationOutput/exercise1/output_images/' + phase_names[current_phase] + '.eps'
@@ -129,18 +130,21 @@ def step_size_plotter(step_sizes:list,
             
             
     
-    return final_max_error_figure
+    return final_max_error_figure,central_accelerations
 
 # first part of the exercise
 #step_size_plotter(step_sizes,save_results=True)
 
 #second part of the exercise
-step_sizes    = 10.**np.linspace(1.0,2.3,60)
+step_sizes    = 10.**np.linspace(1.0,2.3,70)
 
+# Big problems with this !
 #step_sizes = np.array([1,5,10,20,25.0006,25.,30,40,50,85,100,150,200,400,800,1000])
-final_solution = step_size_plotter(step_sizes,save_results=False)
+
+final_solution,central_accelerations = step_size_plotter(step_sizes,save_results=False)
 
 fig, ax       = plt.subplots(1,2)    
+fig1,ax1      = plt.subplots(1,2)
 
 for jj,phase_name in enumerate(phase_names):
         
@@ -151,6 +155,12 @@ for jj,phase_name in enumerate(phase_names):
     ax[jj].set_ylabel(r'$\epsilon_{max} [m]$')
     ax[jj].set_yscale('log')
     ax[jj].set_title(phase_name)
+    
+    acc = central_accelerations[phase_name]
+    ax1[jj].plot((acc[:,0]-acc[0,0])/60/60,acc[:,1])
+    ax1[jj].set_xlabel('time [h]')
+    ax1[jj].set_ylabel(r'acceleration [$m/s^2$]')
+    ax1[jj].set_title(phase_name)
     
 fig.tight_layout()
 plt.show()

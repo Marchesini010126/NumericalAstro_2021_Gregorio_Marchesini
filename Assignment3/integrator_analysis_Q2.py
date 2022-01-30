@@ -138,7 +138,8 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
             integrator_settings = propagation_setup.integrator.runge_kutta_variable_step_size(
                                   current_phase_start_time, initial_time_step, coefficient_set,
                                   minimum_step_size, maximum_step_size,
-                                  current_tolerance, current_tolerance)
+                                  current_tolerance,current_tolerance )
+                                 # change max tol to 10**-5 if you want to see Q2b
             
             # Define output file name
             file_output_identifier = "./exercise2/Iteration_" + str(run_flyby_from_closest_approach) + "tolerance_" +\

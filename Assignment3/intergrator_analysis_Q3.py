@@ -121,6 +121,7 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
         interpolator_settings  = interpolators.lagrange_interpolation( 8 )
         benchmark_interpolator = interpolators.create_one_dimensional_interpolator(
             benchmark_dynamics_simulator.state_history, interpolator_settings )
+        
         print('Done')
         # Perform integration of dynamics with different tolerances
         for kk,current_tolerance in enumerate(integration_tolerances):
@@ -141,7 +142,7 @@ for run_flyby_from_closest_approach in range(number_of_iterations):
                                   current_tolerance, current_tolerance)
             
             # Define output file name
-            file_output_identifier = "./exercise2/Iteration_" + str(run_flyby_from_closest_approach) + "tolerance_" +\
+            file_output_identifier = "./exercise3/Iteration_" + str(run_flyby_from_closest_approach) + "tolerance_" +\
                                      integration_tolerances_names[kk] + \
                                      "_phase_" + str(phase_names[current_phase])
             

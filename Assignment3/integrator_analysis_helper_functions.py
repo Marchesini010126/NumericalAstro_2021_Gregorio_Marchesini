@@ -386,7 +386,7 @@ def get_perturbed_accelerations(
             "Europa"             : [propagation_setup.acceleration.point_mass_gravity()],
             "Saturn"             : [propagation_setup.acceleration.point_mass_gravity()],
             "Callisto"           : [propagation_setup.acceleration.point_mass_gravity()],
-            }
+             }
     else :
         raise ValueError('not admitted central body')
     
@@ -402,7 +402,10 @@ def get_perturbed_accelerations(
 
     return acceleration_models
 
-def get_closest_approach_time( ):
+def get_closest_approach_time(current_phase_start_time:float,
+                              current_phase_end_time:float,
+                              observer_body_name:str,
+                              print_proof:bool = False):
     """
     Function that computes the instant of closest approach of the Callisto flyby, for the specific flyby under
     consideration. In this function, do *not* propagate the dynamics. Instead, use the spice_interface to
@@ -410,13 +413,39 @@ def get_closest_approach_time( ):
 
     Parameters
     ----------
-
+    current_phase_start_time (float) : start time of the flyby
+    current_phase_end_time   (float) : end time of the flyby 
+     observer_body_name      (str)   : name of the central body
+    
     Return
     ------
     Instant of closest approach of the Callisto flyby
     """
-
-    return ...
+    
+    time   = np.arange(current_phase_start_time,current_phase_end_time,2)
+    mindist = np.infty
+    
+    useless = []
+    for jj,t in enumerate(time) :
+        position = spice_interface.get_body_cartesian_position_at_epoch(target_body_name= "JUICE",
+                                                                        observer_body_name=observer_body_name,
+                                                                       reference_frame_name= "ECLIPJ2000",
+                                                                        aberration_corrections="NONE",
+                                                                        ephemeris_time= t) 
+        
+        dist = np.sqrt(np.sum(position**2)) 
+        if dist< mindist :
+            mindist = dist
+            t_approach = t-current_phase_start_time  
+            index = jj
+        useless.append(dist)
+    
+    if print_proof :
+        fig,ax = plt.subplots()
+        ax.plot(time-time[0],np.array(useless))
+        ax.scatter(t_approach,useless[index],s = 100)
+        
+    return t_approach
 
 
 #### added by Gregorio Marchesini
@@ -424,7 +453,7 @@ def get_closest_approach_time( ):
 
 def read_solution(filename:str) :
     
-    """read simple txt file containing a matrix with each row disposed on a different line
+    """read simple dat file containing a matrix with each row disposed on a different line
     
     Parameters 
     ----------

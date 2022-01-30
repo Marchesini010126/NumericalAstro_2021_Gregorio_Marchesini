@@ -59,6 +59,8 @@ for file in files_list :
         ax2[0].set_ylabel(r'$\epsilon (t) [m]$')
         
         ax2[1].plot((time_stamps[:-1]-time_stamps[0])/60/60,time_step,label='10E-'+power_tol)
+        #ax2[1].plot((time_stamps[:40]-time_stamps[0])/60/60,time_step[:40],label='10E-'+power_tol)
+        
         ax2[1].set_yscale('log')
         ax2[1].set_xlabel('time [h]')
         ax2[1].set_ylabel(r'$\Delta t [s]$')
